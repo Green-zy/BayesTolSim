@@ -1,6 +1,6 @@
 # src/callbacks/view_dim_distribution.py
 
-from dash import Input, Output
+from dash import Input, Output, ALL
 import plotly.graph_objects as go
 import numpy as np
 import numexpr as ne
@@ -10,12 +10,31 @@ from src.stores.global_store import dimensions_store
 
 
 def register_view_dim_distribution_callback(app):
+    def _calculate_cdf(x_values, dist_name, para1, para2):
+        """Calculate cumulative distribution function values"""
+        try:
+            if dist_name == "normal":
+                return norm.cdf(x_values, loc=para1, scale=para2)
+            elif dist_name == "lognormal":
+                return lognorm.cdf(x_values, s=para2, scale=np.exp(para1))
+            elif dist_name == "beta":
+                return beta.cdf(x_values, a=para1, b=para2)
+            elif dist_name == "gamma":
+                return gamma.cdf(x_values, a=para1, scale=para2)
+            else:
+                return np.zeros_like(x_values)
+        except:
+            return np.zeros_like(x_values)
+
     @app.callback(
         Output("dimension-distribution-plot", "figure"),
         Output("dimension-statistics", "children"),
-        Input("select-dim-to-view", "value")
+        Input("select-dim-to-view", "value"),
+        Input({"type": "dim-para1", "index": ALL}, "value"),  # Added to update plot when parameters change
+        Input({"type": "dim-para2", "index": ALL}, "value"),  # Added to update plot when parameters change
+        Input({"type": "dim-dist", "index": ALL}, "value"),   # Added to update plot when distribution changes
     )
-    def update_distribution_view(selected_dim_key):
+    def update_distribution_view(selected_dim_key, para1_values, para2_values, dist_values):
         if selected_dim_key is None:
             # Return an empty figure and a message if no dimension is selected
             fig = go.Figure()
@@ -24,7 +43,8 @@ def register_view_dim_distribution_callback(app):
                 yaxis=dict(visible=False),
                 plot_bgcolor="white",
                 margin=dict(l=40, r=40, t=40, b=40),
-                height=350
+                height=450,  # Increased height
+                width=600    # Reduced width
             )
             fig.add_annotation(
                 text="Please select a dimension to view its distribution",
@@ -46,10 +66,44 @@ def register_view_dim_distribution_callback(app):
 
         # Check if distribution type and parameters are provided
         if dist_name is None:
-            return go.Figure(), "Please select a distribution type first."
+            fig = go.Figure()
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor="white",
+                margin=dict(l=40, r=40, t=40, b=40),
+                height=450,
+                width=600
+            )
+            fig.add_annotation(
+                text="Please select a distribution type first",
+                xref="paper", yref="paper",
+                x=0.5, y=0.5,
+                showarrow=False,
+                font=dict(size=14, color="gray"),
+                align="center"
+            )
+            return fig, "Please select a distribution type first."
         
         if para1 is None or para2 is None:
-            return go.Figure(), "Please provide both parameters."
+            fig = go.Figure()
+            fig.update_layout(
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False),
+                plot_bgcolor="white",
+                margin=dict(l=40, r=40, t=40, b=40),
+                height=450,
+                width=600
+            )
+            fig.add_annotation(
+                text="Please provide both parameters",
+                xref="paper", yref="paper",
+                x=0.5, y=0.5,
+                showarrow=False,
+                font=dict(size=14, color="gray"),
+                align="center"
+            )
+            return fig, "Please provide both parameters."
 
         # Make sure parameters are numeric expressions
         try:
@@ -71,7 +125,9 @@ def register_view_dim_distribution_callback(app):
                     return go.Figure(), "Standard deviation must be greater than 0 for normal distribution."
                 x = np.linspace(para1 - 4 * para2, para1 + 4 * para2, 500)
                 y = norm.pdf(x, loc=para1, scale=para2)
-                stats = f"Distribution: Normal\nMean (μ): {para1:.3f}\nStd Dev (σ): {para2:.3f}\nVariance: {para2**2:.3f}"
+                p5 = norm.ppf(0.05, loc=para1, scale=para2)
+                p95 = norm.ppf(0.95, loc=para1, scale=para2)
+                stats = f"Distribution: Normal\nMean (μ): {para1:.3f}\nStd Dev (σ): {para2:.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
 
             elif dist_name == "lognormal":
                 if para2 <= 0:
@@ -80,7 +136,9 @@ def register_view_dim_distribution_callback(app):
                 y = lognorm.pdf(x, s=para2, scale=np.exp(para1))
                 mean = np.exp(para1 + 0.5 * para2**2)
                 std = np.sqrt((np.exp(para2**2) - 1) * np.exp(2 * para1 + para2**2))
-                stats = f"Distribution: Lognormal\nLocation Parameter: {para1:.3f}\nShape Parameter: {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {std:.3f}"
+                p5 = lognorm.ppf(0.05, s=para2, scale=np.exp(para1))
+                p95 = lognorm.ppf(0.95, s=para2, scale=np.exp(para1))
+                stats = f"Distribution: Lognormal\nLocation Parameter: {para1:.3f}\nShape Parameter: {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {std:.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
 
             elif dist_name == "beta":
                 if para1 <= 0 or para2 <= 0:
@@ -89,7 +147,9 @@ def register_view_dim_distribution_callback(app):
                 y = beta.pdf(x, a=para1, b=para2)
                 mean = para1 / (para1 + para2)
                 var = (para1 * para2) / (((para1 + para2)**2) * (para1 + para2 + 1))
-                stats = f"Distribution: Beta\nα Parameter: {para1:.3f}\nβ Parameter: {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {np.sqrt(var):.3f}\nVariance: {var:.3f}"
+                p5 = beta.ppf(0.05, a=para1, b=para2)
+                p95 = beta.ppf(0.95, a=para1, b=para2)
+                stats = f"Distribution: Beta\nα Parameter: {para1:.3f}\nβ Parameter: {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {np.sqrt(var):.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
 
             elif dist_name == "gamma":
                 if para1 <= 0 or para2 <= 0:
@@ -98,18 +158,22 @@ def register_view_dim_distribution_callback(app):
                 y = gamma.pdf(x, a=para1, scale=para2)
                 mean = para1 * para2
                 std = np.sqrt(para1) * para2
-                stats = f"Distribution: Gamma\nShape Parameter (k): {para1:.3f}\nScale Parameter (θ): {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {std:.3f}\nVariance: {std**2:.3f}"
+                p5 = gamma.ppf(0.05, a=para1, scale=para2)
+                p95 = gamma.ppf(0.95, a=para1, scale=para2)
+                stats = f"Distribution: Gamma\nShape Parameter (k): {para1:.3f}\nScale Parameter (θ): {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {std:.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
 
             else:
                 return go.Figure(), f"Unsupported distribution type: {dist_name}"
 
-            # Create the figure
+            # Create the figure with adjusted dimensions and custom hover template
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=x, y=y, 
                 mode="lines", 
                 name=f"{dim_name} ({dist_name})",
-                line=dict(width=3)
+                line=dict(width=3),
+                hovertemplate="<b>Value:</b> %{x:.4f}<br><b>Density:</b> %{y:.4f}<br><b>CDF:</b> %{customdata:.4f}<extra></extra>",
+                customdata=_calculate_cdf(x, dist_name, para1, para2)
             ))
             
             fig.update_layout(
@@ -117,14 +181,15 @@ def register_view_dim_distribution_callback(app):
                 margin=dict(l=40, r=20, t=60, b=40),
                 xaxis_title="Value",
                 yaxis_title="Probability Density",
-                height=350,
+                height=450,  # Increased height
+                width=600,   # Reduced width
                 plot_bgcolor="white",
                 paper_bgcolor="white"
             )
             
-            # Add grid lines
-            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
-            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+            # Add grid lines with transparency
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.3)')
+            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.3)')
 
             return fig, stats
 

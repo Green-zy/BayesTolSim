@@ -1,6 +1,6 @@
 # src/callbacks/dimension_rows.py
 
-from dash import Input, Output, State, ctx
+from dash import Input, Output, State, ctx, ALL
 from src.components.dimension_row import generate_dimension_row
 from src.stores.global_store import dimensions_store
 
@@ -12,10 +12,11 @@ def register_dim_row_callbacks(app):
         Output("select-dim-to-view", "options"),  
         Input("add-dim", "n_clicks"),
         Input("remove-dim", "n_clicks"),
+        Input({"type": "dim-name", "index": ALL}, "value"),  # Added to update dropdown when names change
         State("dim-count", "data"),
         State("dimension-form-container", "children")
     )
-    def update_dimension_rows(add_clicks, remove_clicks, count, children):
+    def update_dimension_rows(add_clicks, remove_clicks, names, count, children):
         children = children or []
         count = count or 0
 
@@ -34,10 +35,18 @@ def register_dim_row_callbacks(app):
             children = children[:-1]
             dimensions_store.pop(f"dim_{count}", None)
 
-        dropdown_options = [
-            {"label": dimensions_store[k]["name"], "value": k}
-            for k in dimensions_store
-        ]
+        # Update dimension names in store when names change
+        if names:
+            for i, name in enumerate(names):
+                dim_key = f"dim_{i}"
+                if dim_key in dimensions_store and name:
+                    dimensions_store[dim_key]["name"] = name
+
+        # Create dropdown options using actual dimension names
+        dropdown_options = []
+        for k in dimensions_store:
+            dim_name = dimensions_store[k]["name"]
+            if dim_name:  # Only add if name is not empty
+                dropdown_options.append({"label": dim_name, "value": k})
 
         return children, count, dropdown_options
-

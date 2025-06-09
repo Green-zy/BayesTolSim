@@ -37,13 +37,20 @@ layout = dbc.Container([
         ])
     ], className="mb-4"),
 
-    # Card 4: Dimension Distribution Viewer
+    # Card 4: Dimension Distribution Viewer - Reduced width
     dbc.Card([
         dbc.CardBody([
             html.H4("View Distribution of a Dimension"),
-            dcc.Dropdown(id="select-dim-to-view", placeholder="Select a Dimension", style={"width": "300px", "marginBottom": "15px"}),
+            dcc.Dropdown(
+                id="select-dim-to-view", 
+                placeholder="Select a Dimension", 
+                style={"width": "350px", "marginBottom": "15px"}
+            ),
             dcc.Graph(id="dimension-distribution-plot"),
-            html.Pre(id="dimension-statistics", style={"whiteSpace": "pre-wrap", "fontSize": "0.9rem"})
+            html.Pre(
+                id="dimension-statistics", 
+                style={"whiteSpace": "pre-wrap", "fontSize": "0.9rem"}
+            )
         ])
-    ], className="mb-4")
+    ], className="mb-4", style={"maxWidth": "700px"})  # Constrained width, left aligned
 ], fluid=True)

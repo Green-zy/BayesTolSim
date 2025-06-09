@@ -38,7 +38,7 @@ def register_param_display_callback(app):
                 dimensions_store[dim_key]["dist"] = dists[i]
             
             # Update parameters (store directly if numeric, otherwise keep as string)
-            if i < len(values1) and values1[i] is not None:
+            if i < len(values1) and values1[i] is not None and values1[i] != "":
                 if isinstance(values1[i], (int, float)):
                     dimensions_store[dim_key]["para1"] = values1[i]
                 else:
@@ -49,7 +49,7 @@ def register_param_display_callback(app):
                     except:
                         dimensions_store[dim_key]["para1"] = values1[i]
             
-            if i < len(values2) and values2[i] is not None:
+            if i < len(values2) and values2[i] is not None and values2[i] != "":
                 if isinstance(values2[i], (int, float)):
                     dimensions_store[dim_key]["para2"] = values2[i]
                 else:

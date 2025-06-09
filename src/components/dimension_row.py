@@ -56,10 +56,7 @@ def generate_dimension_row(i):
                 )
             ], style={"display": "flex", "alignItems": "center", "gap": "5px", "padding": "5px", "width": "220px"}),
 
-            html.Div(
-                id={"type": "dim-params-output", "index": i},
-                style={"minWidth": "200px", "padding": "5px", "fontSize": "0.85rem", "color": "gray"}
-            ),
+            # Removed the parameter display div since values are shown directly in input boxes
 
             html.Div(dcc.Upload(
                 id={"type": "dim-mle", "index": i},
@@ -76,7 +73,3 @@ def generate_dimension_row(i):
         ],
         style={"display": "flex", "flexWrap": "nowrap", "alignItems": "center"})
     ])
-
-
-
-
