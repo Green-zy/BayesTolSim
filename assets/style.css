@@ -1,0 +1,9 @@
+/* assets/style.css */
+
+.Select-control {
+    height: 33px !important;
+    min-height: 30px !important;
+    line-height: 33px !important;
+    box-sizing: border-box;
+    padding: 0px 6px;
+}

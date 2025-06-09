@@ -14,7 +14,6 @@ def register_chain_summary_callback(app):
     )
     def update_chain_figure(names, dirs, nominals, dists):
         if not names or all(v in [None, "", []] for v in names):
-            # 初始状态：空白图 + 提示信息
             fig = go.Figure()
             fig.update_layout(
                 xaxis=dict(visible=False),

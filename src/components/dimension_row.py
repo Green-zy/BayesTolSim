@@ -6,72 +6,75 @@ from src.utils.constants import DISTRIBUTION_OPTIONS
 
 def generate_dimension_row(i):
     return html.Div([
-        dbc.Row([
-            dbc.Col(
+        html.Div([
+            html.Div(dcc.Input(
+                id={"type": "dim-name", "index": i},
+                placeholder="Name", type="text", className="form-control"
+            ), style={"width": "160px", "padding": "5px"}),
+
+            html.Div(dcc.Dropdown(
+                id={"type": "dim-dir", "index": i},
+                options=[{"label": "+", "value": "+"}, {"label": "-", "value": "-"}],
+                placeholder="Dir"
+            ), style={"width": "80px", "padding": "5px"}),
+
+            html.Div(dcc.Input(
+                id={"type": "dim-nominal", "index": i},
+                placeholder="Nominal (mm)", type="number", className="form-control"
+            ), style={"width": "160px", "padding": "5px"}),
+
+            html.Div([
                 dcc.Input(
-                    id={"type": "dim-name", "index": i},
-                    placeholder="Name", type="text", className="form-control"
+                    id={"type": "dim-tol-upper", "index": i},
+                    placeholder="Upper Tolerance", type="number", className="form-control",
+                    style={"width": "165px", "marginRight": "10px"}
                 ),
-                width=2, style={"padding": "2px"}
-            ),
-            dbc.Col(
-                dcc.Dropdown(
-                    id={"type": "dim-dir", "index": i},
-                    options=[{"label": "+", "value": "+"}, {"label": "-", "value": "-"}],
-                    placeholder="Dir"
-                ),
-                width=1, style={"padding": "2px"}
-            ),
-            dbc.Col(
                 dcc.Input(
-                    id={"type": "dim-nominal", "index": i},
-                    placeholder="Nominal", type="number",
-                    className="form-control", style={"width": "90%"}
-                ),
-                width=2, style={"padding": "2px"}
-            ),
-            dbc.Col(
+                    id={"type": "dim-tol-lower", "index": i},
+                    placeholder="Lower Tolerance", type="number", className="form-control",
+                    style={"width": "165px"}
+                )
+            ], style={"display": "flex", "alignItems": "center", "padding": "5px", "width": "350px"}),
+
+            html.Div(dcc.Dropdown(
+                id={"type": "dim-dist", "index": i},
+                options=DISTRIBUTION_OPTIONS, placeholder="Distribution"
+            ), style={"width": "150px", "padding": "5px"}),
+
+            html.Div([
                 dcc.Input(
-                    id={"type": "dim-tol", "index": i},
-                    placeholder="Tolerance", type="number",
-                    className="form-control", style={"width": "90%"}
+                    id={"type": "dim-para1", "index": i},
+                    placeholder="Para1", type="text", className="form-control",
+                    style={"width": "100px", "marginRight": "5px"},
+                    debounce=False,  # needed for n_submit to work well
                 ),
-                width=2, style={"padding": "2px"}
+                dcc.Input(
+                    id={"type": "dim-para2", "index": i},
+                    placeholder="Para2", type="text", className="form-control",
+                    style={"width": "100px"},
+                    debounce=False,
+                )
+            ], style={"display": "flex", "alignItems": "center", "gap": "5px", "padding": "5px", "width": "220px"}),
+
+            html.Div(
+                id={"type": "dim-params-output", "index": i},
+                style={"minWidth": "200px", "padding": "5px", "fontSize": "0.85rem", "color": "gray"}
             ),
-            dbc.Col(
-                dcc.Dropdown(
-                    id={"type": "dim-dist", "index": i},
-                    options=DISTRIBUTION_OPTIONS, placeholder="Distribution"
-                ),
-                width=2, style={"padding": "2px"}
-            ),
-            dbc.Col(
-                html.Div(id={"type": "dim-params", "index": i}),
-                width=2, style={"padding": "2px"}
-            ),
-            dbc.Col(
-                html.Div([
-                    dcc.Upload(
-                        id={"type": "dim-mle", "index": i},
-                        children=html.Div("MLE Data"),
-                        style={"border": "1px dashed gray", "padding": "2px", "textAlign": "center"},
-                        multiple=False
-                    )
-                ]),
-                width=1, style={"padding": "2px"}
-            ),
-            dbc.Col(
-                html.Div([
-                    dcc.Upload(
-                        id={"type": "dim-bayes", "index": i},
-                        children=html.Div("Bayes Data"),
-                        style={"border": "1px dashed gray", "padding": "2px", "textAlign": "center"},
-                        multiple=False
-                    )
-                ]),
-                width=1, style={"padding": "2px"}
-            )
-        ], className="mb-1")
+
+            html.Div(dcc.Upload(
+                id={"type": "dim-mle", "index": i},
+                children=html.Div("MLE Data"),
+                style={"border": "1px dashed gray", "padding": "5px", "textAlign": "center"}
+            ), style={"width": "120px", "padding": "5px"}),
+
+            html.Div(dcc.Upload(
+                id={"type": "dim-bayes", "index": i},
+                children=html.Div("Bayes Data"),
+                style={"border": "1px dashed gray", "padding": "5px", "textAlign": "center"}
+            ), style={"width": "120px", "padding": "5px"}),
+
+        ],
+        style={"display": "flex", "flexWrap": "nowrap", "alignItems": "center"})
     ])
 
 
