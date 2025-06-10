@@ -11,6 +11,9 @@ warnings.filterwarnings('ignore')
 
 def register_final_dimension_simulation_callback(app):
     
+    # Store simulation data for hover handling
+    app._final_simulation_data = {}
+    
     @app.callback(
         Output("final-dimension-content", "children"),
         Input("run-simulation-btn", "n_clicks"),
@@ -99,12 +102,19 @@ def register_final_dimension_simulation_callback(app):
                 ]
             
             # Create plot and statistics
-            fig = create_final_dimension_plot(final_samples)
+            fig, x_data, y_data, cdf_data = create_final_dimension_plot_with_data(final_samples)
             stats_text = calculate_final_dimension_statistics(final_samples, num_samples)
+            
+            # Store data for hover handling
+            app._final_simulation_data = {
+                'x_data': x_data,
+                'y_data': y_data,
+                'cdf_data': cdf_data
+            }
             
             return [
                 dcc.Graph(
-                    id="final-dimension-plot-interactive",  # Special ID for click handling
+                    id="final-dimension-plot",
                     figure=fig,
                     style={"height": "400px"}
                 ),
@@ -130,6 +140,111 @@ def register_final_dimension_simulation_callback(app):
                     }
                 )
             ]
+
+    @app.callback(
+        Output("final-dimension-plot", "figure"),
+        Input("final-dimension-plot", "hoverData"),
+        prevent_initial_call=True
+    )
+    def handle_plot_hover(hover_data):
+        """Handle hover on the final dimension plot"""
+        if not hover_data or not hasattr(app, '_final_simulation_data'):
+            return go.Figure()  # Return empty figure if no data
+            
+        try:
+            # Get stored simulation data
+            stored_data = app._final_simulation_data
+            x_data = np.array(stored_data['x_data'])
+            y_data = np.array(stored_data['y_data'])
+            cdf_data = stored_data['cdf_data']
+            
+            # Get hovered point
+            hovered_x = float(hover_data['points'][0]['x'])
+            
+            # Find indices for fill area (from left edge to hovered point)
+            fill_indices = x_data <= hovered_x
+            x_fill = x_data[fill_indices]
+            y_fill = y_data[fill_indices]
+            
+            # Create new figure
+            fig = go.Figure()
+            
+            # Add red fill area under the curve
+            if len(x_fill) > 0:
+                fig.add_trace(go.Scatter(
+                    x=np.concatenate([x_fill, [x_fill[-1]], [x_fill[0]]]),
+                    y=np.concatenate([y_fill, [0], [0]]),
+                    fill="toself",
+                    fillcolor="rgba(255, 0, 0, 0.5)",  # Red with 50% transparency
+                    line=dict(width=0),
+                    showlegend=False,
+                    hoverinfo="skip"
+                ))
+            
+            # Add main purple curve
+            fig.add_trace(go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode="lines",
+                name="Final Dimension Distribution",
+                line=dict(width=3, color="purple"),
+                hovertemplate="<b>Value:</b> %{x:.4f}<br><b>Density:</b> %{y:.4f}<br><b>CDF:</b> %{customdata:.4f}<extra></extra>",
+                customdata=cdf_data
+            ))
+            
+            # Add hover point marker
+            hovered_y = np.interp(hovered_x, x_data, y_data)
+            hovered_cdf = np.interp(hovered_x, x_data, cdf_data) if cdf_data else 0
+            
+            fig.add_trace(go.Scatter(
+                x=[hovered_x],
+                y=[hovered_y],
+                mode="markers",
+                marker=dict(size=10, color="orange", symbol="circle", line=dict(width=2, color="white")),
+                showlegend=False,
+                hovertemplate=f"<b>Hovered Point</b><br>Value: {hovered_x:.4f}<br>Density: {hovered_y:.4f}<br>CDF: {hovered_cdf:.4f}<extra></extra>"
+            ))
+            
+            # Update layout
+            fig.update_layout(
+                title="Monte Carlo Simulation - Final Dimension Distribution",
+                margin=dict(l=40, r=20, t=60, b=40),
+                xaxis_title="Final Dimension Value",
+                yaxis_title="Probability Density",
+                height=400,
+                plot_bgcolor="white",
+                paper_bgcolor="white",
+                font=dict(size=12),
+                title_font_size=14,
+                showlegend=False
+            )
+            
+            # Add grid lines
+            fig.update_xaxes(
+                showgrid=True, 
+                gridwidth=0.8, 
+                gridcolor='rgba(180,180,180,0.4)',
+                zeroline=True,
+                zerolinewidth=1,
+                zerolinecolor='rgba(100,100,100,0.6)'
+            )
+            fig.update_yaxes(
+                showgrid=True, 
+                gridwidth=0.8, 
+                gridcolor='rgba(180,180,180,0.4)',
+                zeroline=True,
+                zerolinewidth=1,
+                zerolinecolor='rgba(100,100,100,0.6)'
+            )
+            
+            return fig
+            
+        except Exception as e:
+            print(f"Hover handler error: {e}")
+            import traceback
+            traceback.print_exc()
+            # Return original plot without hover effects
+            return create_original_plot_from_stored_data(app._final_simulation_data)
 
 def run_monte_carlo_simulation(names, dists, para1s, para2s, dirs, num_samples):
     """Run Monte Carlo simulation for final dimension chain"""
@@ -216,8 +331,8 @@ def generate_distribution_samples(dist_type, para1, para2, num_samples):
         print(f"Sample generation error for {dist_type}: {e}")
         return None
 
-def create_final_dimension_plot(final_samples):
-    """Create the final dimension distribution plot"""
+def create_final_dimension_plot_with_data(final_samples):
+    """Create the final dimension distribution plot and return data"""
     try:
         # Calculate histogram for the samples
         n_bins = min(50, max(10, len(final_samples) // 100))
@@ -259,14 +374,155 @@ def create_final_dimension_plot(final_samples):
             customdata=cdf_values
         ))
         
-        # Add invisible scatter points for click detection and shadow filling
+        fig.update_layout(
+            title="Monte Carlo Simulation - Final Dimension Distribution",
+            margin=dict(l=40, r=20, t=60, b=40),
+            xaxis_title="Final Dimension Value",
+            yaxis_title="Probability Density",
+            height=400,
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            font=dict(size=12),
+            title_font_size=14,
+            showlegend=False
+        )
+        
+        # Add grid lines
+        fig.update_xaxes(
+            showgrid=True, 
+            gridwidth=0.8, 
+            gridcolor='rgba(180,180,180,0.4)',
+            zeroline=True,
+            zerolinewidth=1,
+            zerolinecolor='rgba(100,100,100,0.6)'
+        )
+        fig.update_yaxes(
+            showgrid=True, 
+            gridwidth=0.8, 
+            gridcolor='rgba(180,180,180,0.4)',
+            zeroline=True,
+            zerolinewidth=1,
+            zerolinecolor='rgba(100,100,100,0.6)'
+        )
+        
+        return fig, x_smooth.tolist(), y_smooth.tolist(), cdf_values
+        
+    except Exception as e:
+        print(f"Plot creation error: {e}")
+        # Return empty figure with error message
+        fig = go.Figure()
+        fig.update_layout(
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            plot_bgcolor="white",
+            margin=dict(l=40, r=40, t=40, b=40),
+            height=400
+        )
+        fig.add_annotation(
+            text=f"Error creating plot: {str(e)}",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=14, color="red"),
+            align="center"
+        )
+        return fig, [], [], []
+
+def create_original_plot_from_stored_data(stored_data):
+    """Create original plot from stored data"""
+    try:
+        x_data = stored_data['x_data']
+        y_data = stored_data['y_data']
+        cdf_data = stored_data['cdf_data']
+        
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatter(
+            x=x_data,
+            y=y_data,
+            mode="lines",
+            name="Final Dimension Distribution",
+            line=dict(width=3, color="purple"),
+            hovertemplate="<b>Value:</b> %{x:.4f}<br><b>Density:</b> %{y:.4f}<br><b>CDF:</b> %{customdata:.4f}<extra></extra>",
+            customdata=cdf_data
+        ))
+        
+        fig.update_layout(
+            title="Monte Carlo Simulation - Final Dimension Distribution",
+            margin=dict(l=40, r=20, t=60, b=40),
+            xaxis_title="Final Dimension Value",
+            yaxis_title="Probability Density",
+            height=400,
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            font=dict(size=12),
+            title_font_size=14,
+            showlegend=False
+        )
+        
+        # Add grid lines
+        fig.update_xaxes(
+            showgrid=True, 
+            gridwidth=0.8, 
+            gridcolor='rgba(180,180,180,0.4)',
+            zeroline=True,
+            zerolinewidth=1,
+            zerolinecolor='rgba(100,100,100,0.6)'
+        )
+        fig.update_yaxes(
+            showgrid=True, 
+            gridwidth=0.8, 
+            gridcolor='rgba(180,180,180,0.4)',
+            zeroline=True,
+            zerolinewidth=1,
+            zerolinecolor='rgba(100,100,100,0.6)'
+        )
+        
+        return fig
+        
+    except Exception as e:
+        print(f"Error creating original plot: {e}")
+        return go.Figure()
+    """Create the final dimension distribution plot"""
+    try:
+        # Calculate histogram for the samples
+        n_bins = min(50, max(10, len(final_samples) // 100))
+        counts, bin_edges = np.histogram(final_samples, bins=n_bins)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        bin_widths = bin_edges[1:] - bin_edges[:-1]
+        total_area = np.sum(counts * bin_widths)
+        densities = counts / total_area
+        
+        # Create x range for smooth curve
+        x_min, x_max = np.min(final_samples), np.max(final_samples)
+        x_range = x_max - x_min
+        x_min -= x_range * 0.1
+        x_max += x_range * 0.1
+        x_smooth = np.linspace(x_min, x_max, 500)
+        
+        # Fit kernel density estimation for smooth curve
+        from scipy.stats import gaussian_kde
+        kde = gaussian_kde(final_samples)
+        y_smooth = kde(x_smooth)
+        
+        # Calculate CDF for hover information
+        cdf_values = []
+        for x_val in x_smooth:
+            cdf_val = np.sum(final_samples <= x_val) / len(final_samples)
+            cdf_values.append(cdf_val)
+        
+        # Create figure
+        fig = go.Figure()
+        
+        # Add the purple curve with hover information and hover detection
         fig.add_trace(go.Scatter(
             x=x_smooth,
             y=y_smooth,
-            mode="markers",
-            marker=dict(size=8, opacity=0),  # Invisible markers
-            showlegend=False,
-            hoverinfo="skip"
+            mode="lines",
+            name="Final Dimension Distribution",
+            line=dict(width=3, color="purple"),
+            hovertemplate="<b>Value:</b> %{x:.4f}<br><b>Density:</b> %{y:.4f}<br><b>CDF:</b> %{customdata:.4f}<extra></extra>",  # Removed click instruction
+            customdata=cdf_values
         ))
         
         fig.update_layout(
