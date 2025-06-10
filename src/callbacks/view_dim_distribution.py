@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import numpy as np
 import numexpr as ne
 from dash.exceptions import PreventUpdate
-from scipy.stats import norm, lognorm, beta, gamma
+from scipy.stats import norm, lognorm, beta, gamma, uniform
 from src.stores.global_store import dimensions_store
 
 
@@ -21,6 +21,8 @@ def register_view_dim_distribution_callback(app):
                 return beta.cdf(x_values, a=para1, b=para2)
             elif dist_name == "gamma":
                 return gamma.cdf(x_values, a=para1, scale=para2)
+            elif dist_name == "uniform":
+                return uniform.cdf(x_values, loc=para1, scale=para2-para1)
             else:
                 return np.zeros_like(x_values)
         except:
@@ -132,7 +134,15 @@ def register_view_dim_distribution_callback(app):
             elif dist_name == "lognormal":
                 if para2 <= 0:
                     return go.Figure(), "Shape parameter must be greater than 0 for lognormal distribution."
-                x = np.linspace(0.001, np.exp(para1 + 3 * para2), 500)
+                
+                # Calculate meaningful range for lognormal (from 0.5th to 99.5th percentile with more padding)
+                p0_5 = lognorm.ppf(0.005, s=para2, scale=np.exp(para1))
+                p99_5 = lognorm.ppf(0.995, s=para2, scale=np.exp(para1))
+                range_span = p99_5 - p0_5
+                x_min = max(0.001, p0_5 - 0.2 * range_span)
+                x_max = p99_5 + 0.2 * range_span
+                
+                x = np.linspace(x_min, x_max, 500)
                 y = lognorm.pdf(x, s=para2, scale=np.exp(para1))
                 mean = np.exp(para1 + 0.5 * para2**2)
                 std = np.sqrt((np.exp(para2**2) - 1) * np.exp(2 * para1 + para2**2))
@@ -154,13 +164,33 @@ def register_view_dim_distribution_callback(app):
             elif dist_name == "gamma":
                 if para1 <= 0 or para2 <= 0:
                     return go.Figure(), "Both parameters must be greater than 0 for Gamma distribution."
-                x = np.linspace(0.001, para1 * para2 * 3, 500)
+                
+                # Calculate meaningful range for gamma (from 0.5th to 99.5th percentile with more padding)
+                p0_5 = gamma.ppf(0.005, a=para1, scale=para2)
+                p99_5 = gamma.ppf(0.995, a=para1, scale=para2)
+                range_span = p99_5 - p0_5
+                x_min = max(0.001, p0_5 - 0.2 * range_span)
+                x_max = p99_5 + 0.2 * range_span
+                
+                x = np.linspace(x_min, x_max, 500)
                 y = gamma.pdf(x, a=para1, scale=para2)
                 mean = para1 * para2
                 std = np.sqrt(para1) * para2
                 p5 = gamma.ppf(0.05, a=para1, scale=para2)
                 p95 = gamma.ppf(0.95, a=para1, scale=para2)
                 stats = f"Distribution: Gamma\nShape Parameter (k): {para1:.3f}\nScale Parameter (θ): {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {std:.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
+
+            elif dist_name == "uniform":
+                if para2 <= para1:
+                    return go.Figure(), "Upper bound (b) must be greater than lower bound (a) for Uniform distribution."
+                x = np.linspace(para1 - 0.1*(para2-para1), para2 + 0.1*(para2-para1), 500)
+                y = uniform.pdf(x, loc=para1, scale=para2-para1)
+                mean = (para1 + para2) / 2
+                var = (para2 - para1)**2 / 12
+                std = np.sqrt(var)
+                p5 = uniform.ppf(0.05, loc=para1, scale=para2-para1)
+                p95 = uniform.ppf(0.95, loc=para1, scale=para2-para1)
+                stats = f"Distribution: Uniform\nLower Bound (a): {para1:.3f}\nUpper Bound (b): {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {std:.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
 
             else:
                 return go.Figure(), f"Unsupported distribution type: {dist_name}"
@@ -184,12 +214,32 @@ def register_view_dim_distribution_callback(app):
                 height=450,  # Increased height
                 width=600,   # Reduced width
                 plot_bgcolor="white",
-                paper_bgcolor="white"
+                paper_bgcolor="white",
+                font=dict(size=12),
+                title_font_size=14
             )
             
-            # Add grid lines with transparency
-            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.3)')
-            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.3)')
+            # Add more comfortable grid lines with better styling
+            fig.update_xaxes(
+                showgrid=True, 
+                gridwidth=0.8, 
+                gridcolor='rgba(180,180,180,0.4)',
+                minor=dict(showgrid=True, gridwidth=0.5, gridcolor='rgba(200,200,200,0.2)'
+                ),
+                zeroline=True,
+                zerolinewidth=1,
+                zerolinecolor='rgba(100,100,100,0.6)'
+            )
+            fig.update_yaxes(
+                showgrid=True, 
+                gridwidth=0.8, 
+                gridcolor='rgba(180,180,180,0.4)',
+                minor=dict(showgrid=True, gridwidth=0.5, gridcolor='rgba(200,200,200,0.2)'
+                ),
+                zeroline=True,
+                zerolinewidth=1,
+                zerolinecolor='rgba(100,100,100,0.6)'
+            )
 
             return fig, stats
 

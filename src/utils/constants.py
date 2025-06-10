@@ -5,4 +5,5 @@ DISTRIBUTION_OPTIONS = [
     {"label": "Lognormal", "value": "lognormal"},
     {"label": "Beta", "value": "beta"},
     {"label": "Gamma", "value": "gamma"},
+    {"label": "Uniform", "value": "uniform"},
 ]

@@ -8,6 +8,9 @@ from src.layout import layout
 from src.callbacks.dimension_rows import register_dim_row_callbacks
 from src.callbacks.param_display import register_param_display_callback
 from src.callbacks.parse_parameters import register_param_parse_callback
+from src.callbacks.param_placeholder import register_param_placeholder_callback
+from src.callbacks.tolerance_to_params import register_tolerance_to_params_callback
+from src.callbacks.mle_estimation import register_mle_callback
 from src.callbacks.chain_summary import register_chain_summary_callback
 from src.callbacks.view_dim_distribution import register_view_dim_distribution_callback
 
@@ -20,6 +23,9 @@ app.layout = layout
 register_dim_row_callbacks(app)
 register_param_display_callback(app)
 register_param_parse_callback(app)
+register_param_placeholder_callback(app)
+register_tolerance_to_params_callback(app)
+register_mle_callback(app)
 register_chain_summary_callback(app)
 register_view_dim_distribution_callback(app)
 
