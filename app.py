@@ -16,6 +16,8 @@ from src.callbacks.bayesian_estimation import register_bayesian_callback  # New 
 from src.callbacks.bayesian_visual_feedback import register_bayesian_visual_feedback_callback  # New import
 from src.callbacks.chain_summary import register_chain_summary_callback
 from src.callbacks.view_dim_distribution import register_view_dim_distribution_callback
+from src.callbacks.final_dimension_simulation import register_final_dimension_simulation_callback  # New import
+from src.callbacks.final_dimension_click_handler import register_final_dimension_click_callback  # New import
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
@@ -34,6 +36,8 @@ register_bayesian_callback(app)  # Register Bayesian callback
 register_bayesian_visual_feedback_callback(app)  # Register Bayesian visual feedback
 register_chain_summary_callback(app)
 register_view_dim_distribution_callback(app)
+register_final_dimension_simulation_callback(app)  # Register final dimension simulation
+register_final_dimension_click_callback(app)  # Register click handler
 
 if __name__ == '__main__':
     app.run(debug=True)
