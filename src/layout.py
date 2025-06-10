@@ -48,14 +48,17 @@ layout = dbc.Container([
                         placeholder="Select a Dimension", 
                         style={"width": "220px", "marginBottom": "15px"}
                     ),
-                    dcc.Graph(id="dimension-distribution-plot"),
+                    dcc.Graph(
+                        id="dimension-distribution-plot",
+                        style={"height": "400px"}  # Set explicit height
+                    ),
                     html.Pre(
                         id="dimension-statistics", 
                         style={"whiteSpace": "pre-wrap", "fontSize": "0.9rem"}
                     )
                 ])
             ], style={"height": "100%"})  # Ensure full height
-        ], width=6, style={"paddingRight": "15px"}),  # Card 4 - 5/12 width with more right padding
+        ], width=6, style={"paddingRight": "15px"}),  # Card 4 - 6/12 width with more right padding
         
         dbc.Col([
             dbc.Card([
@@ -106,6 +109,29 @@ layout = dbc.Container([
                     ])
                 ])
             ], style={"height": "100%"})  # Ensure full height
-        ], width=6, style={"paddingLeft": "15px"})  # Card 5 - 7/12 width with more left padding
-    ], className="mb-4", style={"minHeight": "600px"})  # Set minimum height for the row
+        ], width=6, style={"paddingLeft": "15px"})  # Card 5 - 6/12 width with more left padding
+    ], className="mb-4", style={"minHeight": "600px"}),  # Set minimum height for the row
+    
+    # Author information - Below Card 4 & 5
+    html.Div([
+        html.P([
+            html.Strong("BayesTolSim: "),
+            "A Bayesian Monte Carlo tolerance analysis tool for engineering design. ",
+            html.Br(),
+            html.Strong("Author: "),
+            "Yun Zhou | ",
+            html.Strong("Email: "),
+            html.A("robbiezhou1@gmail.com", href="mailto:robbiezhou1@gmail.com", style={"color": "#007bff", "textDecoration": "none"}),
+            " | ",
+            html.Strong("Github: "),
+            html.A("https://github.com/Green-zy", href="https://github.com/Green-zy", target="_blank", style={"color": "#007bff", "textDecoration": "none"})
+        ], style={
+            "fontSize": "0.85rem",
+            "color": "#6c757d",
+            "textAlign": "center",
+            "marginTop": "10px",
+            "marginBottom": "20px",
+            "lineHeight": "1.4"
+        })
+    ])
 ], fluid=True)
