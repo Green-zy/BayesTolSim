@@ -146,7 +146,6 @@ def bayesian_update_gamma(data, prior_params):
     """Analytical Bayesian update for Gamma distribution"""
     n = len(data)
     sum_data = np.sum(data)
-    sum_log_data = np.sum(np.log(data))
     
     k_prior = prior_params['k_prior']
     theta_prior = prior_params['theta_prior']
@@ -155,39 +154,59 @@ def bayesian_update_gamma(data, prior_params):
     alpha_theta = prior_params['alpha_theta']
     beta_theta = prior_params['beta_theta']
     
-    # For Gamma distribution with conjugate priors:
-    # If X ~ Gamma(k, θ), with priors:
-    # k ~ Gamma(α_k, β_k)  
-    # θ ~ InverseGamma(α_θ, β_θ)
+    print(f"=== GAMMA BAYESIAN UPDATE DEBUG ===")
+    print(f"Prior: k={k_prior:.6f}, θ={theta_prior:.6f}, mean={k_prior*theta_prior:.6f}")
     
-    # Posterior updates (using proper conjugate relationships):
-    # θ | data ~ InverseGamma(α_θ + n*k, β_θ + Σx_i)
-    # For shape parameter, we'll use a weighted average approach since full conjugate updating is complex
-    
-    # First, get MLE estimates from data
+    # Calculate MLE from data for comparison
     sample_mean = np.mean(data)
     sample_var = np.var(data, ddof=1) if n > 1 else sample_mean
     
     if sample_var > 0 and sample_mean > 0:
         k_mle = sample_mean**2 / sample_var
         theta_mle = sample_var / sample_mean
+        print(f"Data MLE: k={k_mle:.6f}, θ={theta_mle:.6f}, mean={k_mle*theta_mle:.6f}")
+        print(f"Data stats: mean={sample_mean:.6f}, std={np.sqrt(sample_var):.6f}")
         
-        # Weighted combination of prior and likelihood
-        # Weight by effective sample sizes
-        prior_weight = 1.0  # Prior has weight of 1 "observation"
-        data_weight = n     # Data has weight of n observations
+        # Method 1: Simple weighted average (current implementation)
+        prior_weight = 1.0
+        data_weight = n
         total_weight = prior_weight + data_weight
         
-        # Posterior estimates as weighted averages
-        k_posterior = (prior_weight * k_prior + data_weight * k_mle) / total_weight
-        theta_posterior = (prior_weight * theta_prior + data_weight * theta_mle) / total_weight
+        k_posterior_method1 = (prior_weight * k_prior + data_weight * k_mle) / total_weight
+        theta_posterior_method1 = (prior_weight * theta_prior + data_weight * theta_mle) / total_weight
+        
+        print(f"Method 1 (current): k={k_posterior_method1:.6f}, θ={theta_posterior_method1:.6f}, mean={k_posterior_method1*theta_posterior_method1:.6f}")
+        
+        # Method 2: Proper conjugate updating (more accurate)
+        # For Gamma likelihood with known shape parameter k:
+        # If we fix k to be close to the data's shape, update θ using conjugate prior
+        
+        # Use a compromise shape parameter between prior and data
+        k_posterior_method2 = (2 * k_prior + n * k_mle) / (2 + n)  # Slightly favor data
+        
+        # Given this k, update θ using conjugate relationship
+        # θ | data ~ InverseGamma(α_θ + n*k, β_θ + Σx_i)
+        alpha_theta_post = alpha_theta + n * k_posterior_method2
+        beta_theta_post = beta_theta + sum_data
+        theta_posterior_method2 = beta_theta_post / (alpha_theta_post - 1)
+        
+        print(f"Method 2 (improved): k={k_posterior_method2:.6f}, θ={theta_posterior_method2:.6f}, mean={k_posterior_method2*theta_posterior_method2:.6f}")
+        
+        # Method 3: Preserve mean, adjust shape conservatively
+        target_mean = (prior_weight * k_prior * theta_prior + data_weight * sample_mean) / total_weight
+        
+        # Use a shape parameter that's a conservative update
+        k_posterior_method3 = (prior_weight * k_prior + data_weight * k_mle) / total_weight
+        theta_posterior_method3 = target_mean / k_posterior_method3
+        
+        print(f"Method 3 (mean-preserving): k={k_posterior_method3:.6f}, θ={theta_posterior_method3:.6f}, mean={k_posterior_method3*theta_posterior_method3:.6f}")
+        
+        # Choose Method 3 for better mean preservation
+        return k_posterior_method3, theta_posterior_method3
         
     else:
         # Fallback to prior if data is insufficient
-        k_posterior = k_prior
-        theta_posterior = theta_prior
-    
-    return k_posterior, theta_posterior
+        return k_prior, theta_prior
 
 def bayesian_update_lognormal(data, prior_params):
     """Analytical Bayesian update for Lognormal distribution (via log-transform)"""
