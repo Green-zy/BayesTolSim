@@ -123,40 +123,6 @@ def calculate_mle_parameters(data, distribution):
             print(f"Uniform MLE: a={a_mle:.6f}, b={b_mle:.6f}")
             return a_mle, b_mle
             
-        elif distribution == "beta":
-            # Beta distribution requires data in [0,1] range
-            data_min, data_max = np.min(data), np.max(data)
-            if data_max <= data_min:
-                print(f"Beta MLE failed: data has no variance")
-                return None, None
-                
-            # Normalize data to [0,1] range
-            normalized_data = (data - data_min) / (data_max - data_min)
-            
-            # Clip to avoid boundary issues
-            normalized_data = np.clip(normalized_data, 1e-6, 1-1e-6)
-            
-            # Method of moments for beta distribution
-            sample_mean = np.mean(normalized_data)
-            sample_var = np.var(normalized_data, ddof=0)
-            
-            if sample_var >= sample_mean * (1 - sample_mean) or sample_var <= 0:
-                print(f"Beta MLE failed: invalid variance ({sample_var}) for mean ({sample_mean})")
-                return None, None
-                
-            # Method of moments formulas
-            common_factor = (sample_mean * (1 - sample_mean) / sample_var) - 1
-            alpha_mle = sample_mean * common_factor
-            beta_mle = (1 - sample_mean) * common_factor
-            
-            # Ensure positive parameters
-            if alpha_mle <= 0 or beta_mle <= 0:
-                print(f"Beta MLE failed: negative parameters (alpha={alpha_mle}, beta={beta_mle})")
-                return None, None
-            
-            print(f"Beta MLE: alpha={alpha_mle:.6f}, beta={beta_mle:.6f}")
-            return alpha_mle, beta_mle
-            
         elif distribution == "gamma":
             # Ensure all data points are positive
             if np.any(data <= 0):

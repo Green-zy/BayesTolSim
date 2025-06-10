@@ -14,8 +14,6 @@ def register_param_placeholder_callback(app):
             return "μ (mu)", "σ (sigma)"
         elif distribution == "lognormal":
             return "μ (location)", "σ (shape)"
-        elif distribution == "beta":
-            return "α (alpha)", "β (beta)"
         elif distribution == "gamma":
             return "k (shape)", "θ (scale)"
         elif distribution == "uniform":

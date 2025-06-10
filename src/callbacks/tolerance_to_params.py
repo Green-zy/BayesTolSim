@@ -67,21 +67,6 @@ def register_tolerance_to_params_callback(app):
             else:
                 return "0.000000", "0.100000"
                 
-        elif distribution == "beta":
-            # Beta: Map tolerance range to [0,1] and use method of moments
-            # Assume tolerance range maps to most of the beta distribution
-            mean_norm = 0.5  # Center the distribution
-            var_norm = (1/6)**2  # Assume 6-sigma-like spread within [0,1]
-            
-            # Method of moments for beta distribution
-            if var_norm < mean_norm * (1 - mean_norm):
-                common_factor = (mean_norm * (1 - mean_norm) / var_norm) - 1
-                alpha = mean_norm * common_factor
-                beta = (1 - mean_norm) * common_factor
-                return f"{alpha:.6f}", f"{beta:.6f}"
-            else:
-                return "2.000000", "2.000000"  # Symmetric beta as fallback
-                
         elif distribution == "gamma":
             # Gamma: Use method of moments
             # Set mean ≈ nominal, shape parameters based on tolerance

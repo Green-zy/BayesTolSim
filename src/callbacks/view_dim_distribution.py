@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import numpy as np
 import numexpr as ne
 from dash.exceptions import PreventUpdate
-from scipy.stats import norm, lognorm, beta, gamma, uniform
+from scipy.stats import norm, lognorm, gamma, uniform
 from src.stores.global_store import dimensions_store
 
 
@@ -17,8 +17,6 @@ def register_view_dim_distribution_callback(app):
                 return norm.cdf(x_values, loc=para1, scale=para2)
             elif dist_name == "lognormal":
                 return lognorm.cdf(x_values, s=para2, scale=np.exp(para1))
-            elif dist_name == "beta":
-                return beta.cdf(x_values, a=para1, b=para2)
             elif dist_name == "gamma":
                 return gamma.cdf(x_values, a=para1, scale=para2)
             elif dist_name == "uniform":
@@ -149,17 +147,6 @@ def register_view_dim_distribution_callback(app):
                 p5 = lognorm.ppf(0.05, s=para2, scale=np.exp(para1))
                 p95 = lognorm.ppf(0.95, s=para2, scale=np.exp(para1))
                 stats = f"Distribution: Lognormal\nLocation Parameter: {para1:.3f}\nShape Parameter: {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {std:.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
-
-            elif dist_name == "beta":
-                if para1 <= 0 or para2 <= 0:
-                    return go.Figure(), "Both parameters must be greater than 0 for Beta distribution."
-                x = np.linspace(0.001, 0.999, 500)
-                y = beta.pdf(x, a=para1, b=para2)
-                mean = para1 / (para1 + para2)
-                var = (para1 * para2) / (((para1 + para2)**2) * (para1 + para2 + 1))
-                p5 = beta.ppf(0.05, a=para1, b=para2)
-                p95 = beta.ppf(0.95, a=para1, b=para2)
-                stats = f"Distribution: Beta\nα Parameter: {para1:.3f}\nβ Parameter: {para2:.3f}\nMean: {mean:.3f}\nStd Dev: {np.sqrt(var):.3f}\n5th Percentile: {p5:.3f}\n95th Percentile: {p95:.3f}"
 
             elif dist_name == "gamma":
                 if para1 <= 0 or para2 <= 0:
