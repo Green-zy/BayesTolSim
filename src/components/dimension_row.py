@@ -6,6 +6,9 @@ from src.utils.constants import DISTRIBUTION_OPTIONS
 
 def generate_dimension_row(i):
     return html.Div([
+        # Hidden store for MLE status
+        dcc.Store(id={"type": "dim-mle-status", "index": i}, data=False),
+        
         html.Div([
             html.Div(dcc.Input(
                 id={"type": "dim-name", "index": i},
@@ -56,13 +59,21 @@ def generate_dimension_row(i):
                 )
             ], style={"display": "flex", "alignItems": "center", "gap": "5px", "padding": "5px", "width": "220px"}),
 
-            # Removed the parameter display div since values are shown directly in input boxes
-
-            html.Div(dcc.Upload(
-                id={"type": "dim-mle", "index": i},
-                children=html.Div("MLE Data"),
-                style={"border": "1px dashed gray", "padding": "5px", "textAlign": "center"}
-            ), style={"width": "120px", "padding": "5px"}),
+            html.Div([
+                dcc.Upload(
+                    id={"type": "dim-mle", "index": i},
+                    children=html.Div(
+                        id={"type": "dim-mle-display", "index": i},
+                        children="MLE Data"
+                    ),
+                    style={
+                        "border": "1px dashed gray", 
+                        "padding": "5px", 
+                        "textAlign": "center",
+                        "transition": "all 0.3s ease"
+                    }
+                )
+            ], style={"width": "120px", "padding": "5px"}),
 
             html.Div(dcc.Upload(
                 id={"type": "dim-bayes", "index": i},

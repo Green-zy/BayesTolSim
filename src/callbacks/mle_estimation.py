@@ -12,6 +12,7 @@ def register_mle_callback(app):
     @app.callback(
         Output({"type": "dim-para1", "index": MATCH}, "value", allow_duplicate=True),
         Output({"type": "dim-para2", "index": MATCH}, "value", allow_duplicate=True),
+        Output({"type": "dim-mle-status", "index": MATCH}, "data"),  # New output for MLE status
         Input({"type": "dim-mle", "index": MATCH}, "contents"),
         State({"type": "dim-mle", "index": MATCH}, "filename"),
         State({"type": "dim-name", "index": MATCH}, "value"),
@@ -20,7 +21,7 @@ def register_mle_callback(app):
     )
     def process_mle_upload(contents, filename, dim_name, distribution):
         if contents is None or distribution is None or dim_name is None:
-            return "", ""
+            return "", "", False
             
         try:
             # Parse the uploaded file
@@ -32,7 +33,7 @@ def register_mle_callback(app):
                 df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
             else:
                 print(f"Invalid file format: {filename}")
-                return "", ""
+                return "", "", False
                 
             print(f"CSV loaded successfully. Columns: {list(df.columns)}")
             print(f"Looking for dimension: '{dim_name}' in distribution: '{distribution}'")
@@ -53,7 +54,7 @@ def register_mle_callback(app):
                         
             if column_name is None:
                 print(f"No matching column found for dimension '{dim_name}'")
-                return "", ""
+                return "", "", False
                 
             print(f"Found matching column: '{column_name}'")
                 
@@ -63,21 +64,21 @@ def register_mle_callback(app):
             
             if len(data) < 2:
                 print("Insufficient data points for MLE")
-                return "", ""
+                return "", "", False
                 
             # Perform MLE based on distribution type
             para1_mle, para2_mle = calculate_mle_parameters(data, distribution)
             
             if para1_mle is not None and para2_mle is not None:
                 print(f"MLE successful: para1={para1_mle:.6f}, para2={para2_mle:.6f}")
-                return f"{para1_mle:.6f}", f"{para2_mle:.6f}"
+                return f"{para1_mle:.6f}", f"{para2_mle:.6f}", True  # True indicates success
             else:
                 print("MLE calculation failed")
-                return "", ""
+                return "", "", False
                 
         except Exception as e:
             print(f"MLE upload processing error: {e}")
-            return "", ""
+            return "", "", False
 
 def calculate_mle_parameters(data, distribution):
     """Calculate MLE parameters for different distributions"""
