@@ -13,11 +13,14 @@ def register_param_display_callback(app):
         Input({"type": "dim-dist", "index": ALL}, "value"),
         Input({"type": "dim-para1", "index": ALL}, "value"),
         Input({"type": "dim-para2", "index": ALL}, "value"),
+        Input({"type": "dim-bayes-status", "index": ALL}, "data"),  # Added to track Bayesian updates
         prevent_initial_call=True
     )
-    def store_dimension_data(names, dists, values1, values2):
+    def store_dimension_data(names, dists, values1, values2, bayes_statuses):
         """Update dimension data in global storage"""
-        for i in range(max(len(names), len(dists), len(values1), len(values2))):
+        max_len = max(len(names), len(dists), len(values1), len(values2), len(bayes_statuses))
+        
+        for i in range(max_len):
             dim_key = f"dim_{i}"
             
             # Ensure dimension exists

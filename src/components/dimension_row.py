@@ -6,8 +6,10 @@ from src.utils.constants import DISTRIBUTION_OPTIONS
 
 def generate_dimension_row(i):
     return html.Div([
-        # Hidden store for MLE status
+        # Hidden stores for MLE and Bayesian status
         dcc.Store(id={"type": "dim-mle-status", "index": i}, data=False),
+        dcc.Store(id={"type": "dim-bayes-status", "index": i}, data=False),
+        dcc.Store(id={"type": "dim-bayes-error", "index": i}, data=""),
         
         html.Div([
             html.Div(dcc.Input(
@@ -75,11 +77,21 @@ def generate_dimension_row(i):
                 )
             ], style={"width": "120px", "padding": "5px"}),
 
-            html.Div(dcc.Upload(
-                id={"type": "dim-bayes", "index": i},
-                children=html.Div("Bayes Data"),
-                style={"border": "1px dashed gray", "padding": "5px", "textAlign": "center"}
-            ), style={"width": "120px", "padding": "5px"}),
+            html.Div([
+                dcc.Upload(
+                    id={"type": "dim-bayes", "index": i},
+                    children=html.Div(
+                        id={"type": "dim-bayes-display", "index": i},
+                        children="Bayes Data"
+                    ),
+                    style={
+                        "border": "1px dashed gray", 
+                        "padding": "5px", 
+                        "textAlign": "center",
+                        "transition": "all 0.3s ease"
+                    }
+                )
+            ], style={"width": "120px", "padding": "5px"}),
 
         ],
         style={"display": "flex", "flexWrap": "nowrap", "alignItems": "center"})
