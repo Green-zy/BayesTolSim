@@ -41,14 +41,15 @@ def calculate_prior_parameters(distribution, nominal, upper_tol, lower_tol):
         target_std = tolerance_range / 6
         
         if target_std > 0 and target_mean > 0:
+            # Method of moments: k = mean²/var, θ = var/mean
             k_prior = (target_mean / target_std) ** 2
             theta_prior = target_std ** 2 / target_mean
             
-            # Hyperpriors
-            alpha_k = k_prior
-            beta_k = 1.0
-            alpha_theta = 2.0
-            beta_theta = theta_prior
+            # Set reasonable hyperpriors that don't dominate the data
+            alpha_k = 2.0  # Weak prior on shape
+            beta_k = 2.0 / k_prior  # Scale to center around k_prior
+            alpha_theta = 2.0  # Weak prior on scale
+            beta_theta = theta_prior  # Scale to center around theta_prior
             
             return {
                 'k_prior': k_prior,
@@ -148,29 +149,43 @@ def bayesian_update_gamma(data, prior_params):
     sum_log_data = np.sum(np.log(data))
     
     k_prior = prior_params['k_prior']
+    theta_prior = prior_params['theta_prior']
     alpha_k = prior_params['alpha_k']
     beta_k = prior_params['beta_k']
     alpha_theta = prior_params['alpha_theta']
     beta_theta = prior_params['beta_theta']
     
-    # Posterior for θ (scale parameter)
-    alpha_theta_post = alpha_theta + n * k_prior
-    beta_theta_post = beta_theta + sum_data
+    # For Gamma distribution with conjugate priors:
+    # If X ~ Gamma(k, θ), with priors:
+    # k ~ Gamma(α_k, β_k)  
+    # θ ~ InverseGamma(α_θ, β_θ)
     
-    theta_posterior = beta_theta_post / (alpha_theta_post - 1)
+    # Posterior updates (using proper conjugate relationships):
+    # θ | data ~ InverseGamma(α_θ + n*k, β_θ + Σx_i)
+    # For shape parameter, we'll use a weighted average approach since full conjugate updating is complex
     
-    # For k (shape parameter), use method of moments approximation
-    # This is a simplification; full Bayesian would require MCMC
+    # First, get MLE estimates from data
     sample_mean = np.mean(data)
     sample_var = np.var(data, ddof=1) if n > 1 else sample_mean
     
-    if sample_var > 0:
+    if sample_var > 0 and sample_mean > 0:
         k_mle = sample_mean**2 / sample_var
-        # Combine with prior
-        weight = n / (n + 1)  # Simple weighting
-        k_posterior = weight * k_mle + (1 - weight) * k_prior
+        theta_mle = sample_var / sample_mean
+        
+        # Weighted combination of prior and likelihood
+        # Weight by effective sample sizes
+        prior_weight = 1.0  # Prior has weight of 1 "observation"
+        data_weight = n     # Data has weight of n observations
+        total_weight = prior_weight + data_weight
+        
+        # Posterior estimates as weighted averages
+        k_posterior = (prior_weight * k_prior + data_weight * k_mle) / total_weight
+        theta_posterior = (prior_weight * theta_prior + data_weight * theta_mle) / total_weight
+        
     else:
+        # Fallback to prior if data is insufficient
         k_posterior = k_prior
+        theta_posterior = theta_prior
     
     return k_posterior, theta_posterior
 

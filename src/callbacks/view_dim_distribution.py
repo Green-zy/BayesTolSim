@@ -115,9 +115,10 @@ def register_view_dim_distribution_callback(app):
         Input({"type": "dim-para1", "index": ALL}, "value"),
         Input({"type": "dim-para2", "index": ALL}, "value"),
         Input({"type": "dim-dist", "index": ALL}, "value"),
+        Input({"type": "dim-mle-status", "index": ALL}, "data"),  # Added to update when MLE is applied
         Input({"type": "dim-bayes-status", "index": ALL}, "data"),  # Added to update when Bayesian is applied
     )
-    def update_distribution_view(selected_dim_key, para1_values, para2_values, dist_values, bayes_status_values):
+    def update_distribution_view(selected_dim_key, para1_values, para2_values, dist_values, mle_status_values, bayes_status_values):
         if selected_dim_key is None:
             # Return an empty figure and a message if no dimension is selected
             fig = go.Figure()
@@ -147,7 +148,8 @@ def register_view_dim_distribution_callback(app):
         para1 = dim.get("para1")
         para2 = dim.get("para2")
         
-        # Check if Bayesian analysis was applied
+        # Check if MLE or Bayesian analysis was applied
+        mle_applied = dim.get("mle_applied", False)
         bayes_applied = dim.get("bayes_applied", False)
 
         # Check if distribution type and parameters are provided
@@ -225,6 +227,9 @@ def register_view_dim_distribution_callback(app):
                 posterior_para1 = dim.get("posterior_para1")
                 posterior_para2 = dim.get("posterior_para2")
                 
+                # Also show histogram if we have Bayesian data
+                bayes_data = dim.get("data", [])
+                
                 # Determine plotting range based on all three distributions
                 x_ranges = []
                 if prior_para1 is not None and prior_para2 is not None:
@@ -233,6 +238,11 @@ def register_view_dim_distribution_callback(app):
                     x_ranges.append(_get_distribution_range(dist_name, likelihood_para1, likelihood_para2))
                 if posterior_para1 is not None and posterior_para2 is not None:
                     x_ranges.append(_get_distribution_range(dist_name, posterior_para1, posterior_para2))
+                
+                # Include data range if available
+                if bayes_data:
+                    data_min, data_max = min(bayes_data), max(bayes_data)
+                    x_ranges.append((data_min - (data_max - data_min) * 0.1, data_max + (data_max - data_min) * 0.1))
                 
                 if x_ranges:
                     x_min = min([r[0] for r in x_ranges])
@@ -245,6 +255,41 @@ def register_view_dim_distribution_callback(app):
                     x_min, x_max = _get_distribution_range(dist_name, para1, para2)
                 
                 x = np.linspace(x_min, x_max, 500)
+                
+                # Add histogram first (so it appears behind curves)
+                if bayes_data:
+                    # Calculate histogram bins and counts for custom hover info
+                    n_bins = min(20, max(5, len(bayes_data) // 3))
+                    counts, bin_edges = np.histogram(bayes_data, bins=n_bins)
+                    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+                    bin_widths = bin_edges[1:] - bin_edges[:-1]
+                    total_area = np.sum(counts * bin_widths)
+                    densities = counts / total_area
+                    percentages = (counts / len(bayes_data)) * 100
+                    
+                    # Create custom hover text
+                    hover_text = []
+                    for i in range(len(counts)):
+                        hover_text.append(
+                            f"<b>Bin:</b> [{bin_edges[i]:.3f}, {bin_edges[i+1]:.3f})<br>"
+                            f"<b>Count:</b> {counts[i]}<br>"
+                            f"<b>Percentage:</b> {percentages[i]:.1f}%<br>"
+                            f"<b>Density:</b> {densities[i]:.4f}"
+                        )
+                    
+                    fig.add_trace(go.Bar(
+                        x=bin_centers,
+                        y=densities,
+                        width=bin_widths,
+                        name="Data Histogram",
+                        opacity=0.3,
+                        marker=dict(
+                            color='rgba(128, 128, 128, 0)',  # No fill
+                            line=dict(color='rgba(128, 128, 128, 0.3)', width=1)  # Gray outline with transparency
+                        ),
+                        hovertemplate="%{customdata}<extra></extra>",
+                        customdata=hover_text
+                    ))
                 
                 # Plot prior (blue)
                 if prior_para1 is not None and prior_para2 is not None:
@@ -293,6 +338,77 @@ def register_view_dim_distribution_callback(app):
                 
                 title_text = f"Bayesian Analysis of Dimension '{dim_name}'"
                 
+            elif mle_applied:
+                # Show MLE curve and data histogram
+                mle_data = dim.get("mle_data", [])
+                mle_para1 = dim.get("mle_para1", para1)
+                mle_para2 = dim.get("mle_para2", para2)
+                
+                # Determine plotting range including data
+                x_ranges = [_get_distribution_range(dist_name, mle_para1, mle_para2)]
+                if mle_data:
+                    data_min, data_max = min(mle_data), max(mle_data)
+                    x_ranges.append((data_min - (data_max - data_min) * 0.1, data_max + (data_max - data_min) * 0.1))
+                
+                x_min = min([r[0] for r in x_ranges])
+                x_max = max([r[1] for r in x_ranges])
+                padding = (x_max - x_min) * 0.1
+                x_min -= padding
+                x_max += padding
+                
+                x = np.linspace(x_min, x_max, 500)
+                
+                # Add histogram first (so it appears behind the MLE curve)
+                if mle_data:
+                    # Calculate histogram bins and counts for custom hover info
+                    n_bins = min(20, max(5, len(mle_data) // 3))
+                    counts, bin_edges = np.histogram(mle_data, bins=n_bins)
+                    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+                    bin_widths = bin_edges[1:] - bin_edges[:-1]
+                    total_area = np.sum(counts * bin_widths)
+                    densities = counts / total_area
+                    percentages = (counts / len(mle_data)) * 100
+                    
+                    # Create custom hover text
+                    hover_text = []
+                    for i in range(len(counts)):
+                        hover_text.append(
+                            f"<b>Bin:</b> [{bin_edges[i]:.3f}, {bin_edges[i+1]:.3f})<br>"
+                            f"<b>Count:</b> {counts[i]}<br>"
+                            f"<b>Percentage:</b> {percentages[i]:.1f}%<br>"
+                            f"<b>Density:</b> {densities[i]:.4f}"
+                        )
+                    
+                    fig.add_trace(go.Bar(
+                        x=bin_centers,
+                        y=densities,
+                        width=bin_widths,
+                        name="Data Histogram",
+                        opacity=0.3,
+                        marker=dict(
+                            color='rgba(128, 128, 128, 0)',  # No fill
+                            line=dict(color='rgba(220, 85, 0, 1)', width=2)  # Orange outline
+                        ),
+                        hovertemplate="%{customdata}<extra></extra>",
+                        customdata=hover_text
+                    ))
+                
+                # Plot MLE curve
+                y_mle = _calculate_pdf(x, dist_name, mle_para1, mle_para2)
+                fig.add_trace(go.Scatter(
+                    x=x, y=y_mle, 
+                    mode="lines", 
+                    name="MLE Fit",
+                    line=dict(width=3, color="blue"),
+                    hovertemplate="<b>MLE Fit</b><br>Value: %{x:.4f}<br>Density: %{y:.4f}<br>CDF: %{customdata:.4f}<extra></extra>",
+                    customdata=_calculate_cdf(x, dist_name, mle_para1, mle_para2)
+                ))
+                
+                stats_text = "=== MLE FIT ===\n" + _format_statistics(dist_name, mle_para1, mle_para2)
+                if mle_data:
+                    stats_text += f"\n\n=== DATA SUMMARY ===\nSample Size: {len(mle_data)}\nSample Mean: {np.mean(mle_data):.3f}\nSample Std: {np.std(mle_data, ddof=1):.3f}\nMin: {np.min(mle_data):.3f}\nMax: {np.max(mle_data):.3f}"
+                title_text = f"MLE Analysis of Dimension '{dim_name}'"
+                
             else:
                 # Show only current distribution (default behavior)
                 x_min, x_max = _get_distribution_range(dist_name, para1, para2)
@@ -322,7 +438,7 @@ def register_view_dim_distribution_callback(app):
                 paper_bgcolor="white",
                 font=dict(size=12),
                 title_font_size=14,
-                showlegend=bayes_applied  # Show legend only when showing multiple curves
+                showlegend=bayes_applied or mle_applied  # Show legend when showing multiple elements
             )
             
             # Add grid lines

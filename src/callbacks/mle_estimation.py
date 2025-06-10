@@ -12,7 +12,7 @@ def register_mle_callback(app):
     @app.callback(
         Output({"type": "dim-para1", "index": MATCH}, "value", allow_duplicate=True),
         Output({"type": "dim-para2", "index": MATCH}, "value", allow_duplicate=True),
-        Output({"type": "dim-mle-status", "index": MATCH}, "data"),  # New output for MLE status
+        Output({"type": "dim-mle-status", "index": MATCH}, "data"),  # Output for MLE status
         Input({"type": "dim-mle", "index": MATCH}, "contents"),
         State({"type": "dim-mle", "index": MATCH}, "filename"),
         State({"type": "dim-name", "index": MATCH}, "value"),
@@ -71,6 +71,22 @@ def register_mle_callback(app):
             
             if para1_mle is not None and para2_mle is not None:
                 print(f"MLE successful: para1={para1_mle:.6f}, para2={para2_mle:.6f}")
+                
+                # Store the data for histogram plotting
+                # Get the index from the callback context
+                index = callback_context.triggered[0]['prop_id'].split('"index":')[1].split(',')[0]
+                dim_key = f"dim_{index}"
+                
+                if dim_key not in dimensions_store:
+                    dimensions_store[dim_key] = {}
+                    
+                dimensions_store[dim_key].update({
+                    'mle_applied': True,
+                    'mle_data': data.tolist(),  # Store the uploaded data
+                    'mle_para1': para1_mle,
+                    'mle_para2': para2_mle
+                })
+                
                 return f"{para1_mle:.6f}", f"{para2_mle:.6f}", True  # True indicates success
             else:
                 print("MLE calculation failed")

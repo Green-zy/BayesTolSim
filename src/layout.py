@@ -40,7 +40,7 @@ layout = dbc.Container([
     # Card 4: Dimension Distribution Viewer - Reduced width
     dbc.Card([
         dbc.CardBody([
-            html.H4("View Distribution of a Dimension"),
+            html.H4("Distribution of Dimension"),
             dcc.Dropdown(
                 id="select-dim-to-view", 
                 placeholder="Select a Dimension", 
