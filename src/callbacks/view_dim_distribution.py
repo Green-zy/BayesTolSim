@@ -131,11 +131,11 @@ def register_view_dim_distribution_callback(app):
                 width=600
             )
             fig.add_annotation(
-                text="Please select a dimension to view its distribution",
+                text="Please select a dimension",
                 xref="paper", yref="paper",
                 x=0.5, y=0.5,
                 showarrow=False,
-                font=dict(size=14, color="gray"),
+                font=dict(size=12, color="gray"),
                 align="center"
             )
             return fig, "Please select a dimension first"

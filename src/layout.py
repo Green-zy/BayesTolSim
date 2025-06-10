@@ -37,20 +37,75 @@ layout = dbc.Container([
         ])
     ], className="mb-4"),
 
-    # Card 4: Dimension Distribution Viewer - Reduced width
-    dbc.Card([
-        dbc.CardBody([
-            html.H4("Distribution of Dimension"),
-            dcc.Dropdown(
-                id="select-dim-to-view", 
-                placeholder="Select a Dimension", 
-                style={"width": "350px", "marginBottom": "15px"}
-            ),
-            dcc.Graph(id="dimension-distribution-plot"),
-            html.Pre(
-                id="dimension-statistics", 
-                style={"whiteSpace": "pre-wrap", "fontSize": "0.9rem"}
-            )
-        ])
-    ], className="mb-4", style={"maxWidth": "700px"})  # Constrained width, left aligned
+    # Cards 4 & 5: Dimension Distribution Viewer and Final Dimension Distribution - Same row
+    dbc.Row([
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4("View Distribution of a Dimension"),
+                    dcc.Dropdown(
+                        id="select-dim-to-view", 
+                        placeholder="Select a Dimension", 
+                        style={"width": "220px", "marginBottom": "15px"}
+                    ),
+                    dcc.Graph(id="dimension-distribution-plot"),
+                    html.Pre(
+                        id="dimension-statistics", 
+                        style={"whiteSpace": "pre-wrap", "fontSize": "0.9rem"}
+                    )
+                ])
+            ], style={"height": "100%"})  # Ensure full height
+        ], width=6, style={"paddingRight": "15px"}),  # Card 4 - 5/12 width with more right padding
+        
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4("Final Dimension Distribution"),
+                    html.Div([
+                        html.Div([
+                            html.Div([
+                                html.Label("Number of Samples:", style={"marginRight": "10px", "fontWeight": "bold", "alignSelf": "center"}),
+                                dcc.Input(
+                                    id="num-samples-input",
+                                    type="number",
+                                    placeholder="Enter samples",
+                                    min=1,
+                                    step=1,
+                                    value=1000,
+                                    style={"width": "140px", "marginRight": "10px"}  # Reduced width by ~30%
+                                ),
+                                dbc.Button(
+                                    "Run Simulation", 
+                                    id="run-simulation-btn",
+                                    color="primary",
+                                    style={
+                                        "height": "33px",
+                                        "display": "flex",
+                                        "alignItems": "center",
+                                        "justifyContent": "center"
+                                    }  # Center text vertically and horizontally
+                                )
+                            ], style={"display": "flex", "alignItems": "center", "marginBottom": "15px"})
+                        ])
+                    ]),
+                    html.Div(id="final-dimension-content", children=[
+                        # Default state - similar to other cards
+                        html.Div(
+                            "Please set dimension chain first.",
+                            style={
+                                "textAlign": "center",
+                                "color": "gray",
+                                "fontSize": "14px",
+                                "padding": "100px 20px",
+                                "height": "300px",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center"
+                            }
+                        )
+                    ])
+                ])
+            ], style={"height": "100%"})  # Ensure full height
+        ], width=6, style={"paddingLeft": "15px"})  # Card 5 - 7/12 width with more left padding
+    ], className="mb-4", style={"minHeight": "600px"})  # Set minimum height for the row
 ], fluid=True)
