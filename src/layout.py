@@ -124,7 +124,10 @@ layout = dbc.Container([
             html.A("robbiezhou1@gmail.com", href="mailto:robbiezhou1@gmail.com", style={"color": "#007bff", "textDecoration": "none"}),
             " | ",
             html.Strong("Github: "),
-            html.A("https://github.com/Green-zy", href="https://github.com/Green-zy", target="_blank", style={"color": "#007bff", "textDecoration": "none"})
+            html.A("https://github.com/Green-zy", href="https://github.com/Green-zy", target="_blank", style={"color": "#007bff", "textDecoration": "none"}),
+            " | ",
+            html.Strong("LinkedIn: "),
+            html.A("www.linkedin.com/in/yun-zhou-robbie-172966187", href="https://www.linkedin.com/in/yun-zhou-robbie-172966187", target="_blank", style={"color": "#007bff", "textDecoration": "none"})
         ], style={
             "fontSize": "0.85rem",
             "color": "#6c757d",

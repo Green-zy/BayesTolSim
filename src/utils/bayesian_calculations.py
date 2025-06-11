@@ -8,109 +8,141 @@ import warnings
 
 def calculate_prior_parameters(distribution, nominal, upper_tol, lower_tol):
     """Calculate prior distribution parameters from tolerance specifications"""
-    try:
-        nominal = float(nominal)
-        upper_tol = float(upper_tol)
-        lower_tol = float(lower_tol)
-    except (ValueError, TypeError):
-        return None, None
-        
-    tolerance_range = upper_tol - lower_tol
+    print(f"=== FUNCTION START: calculate_prior_parameters ===")
+    print(f"Inputs: dist={distribution}, nominal={nominal}, upper={upper_tol}, lower={lower_tol}")
     
-    if distribution == "normal":
-        # Prior: μ ~ N(nominal, σ_μ²), σ² ~ IG(α, β)
-        mu_prior = nominal
-        sigma_mu = tolerance_range / 12  # Prior uncertainty on mean
-        sigma_prior = tolerance_range / 6  # Prior estimate of std dev
+    try:
+        # Input validation
+        if nominal is None or upper_tol is None or lower_tol is None:
+            print("ERROR: One or more inputs is None")
+            return None, "One or more inputs is None"
         
-        # Inverse-Gamma parameters for σ²
-        alpha = 2.5
-        beta = (alpha - 1) * sigma_prior**2
+        print("Converting to float...")
+        nominal_f = float(nominal)
+        upper_tol_f = float(upper_tol)
+        lower_tol_f = float(lower_tol)
+        print(f"Converted: nominal={nominal_f}, upper={upper_tol_f}, lower={lower_tol_f}")
         
-        return {
-            'mu_prior': mu_prior,
-            'sigma_mu': sigma_mu,
-            'alpha': alpha,
-            'beta': beta,
-            'sigma_prior': sigma_prior
-        }, None
+        tolerance_range = upper_tol_f - lower_tol_f
+        print(f"Tolerance range: {tolerance_range}")
         
-    elif distribution == "gamma":
-        # Prior: k ~ Gamma(α_k, β_k), θ ~ IG(α_θ, β_θ)
-        target_mean = nominal if nominal > 0 else 1.0
-        target_std = tolerance_range / 6
+        if tolerance_range <= 0:
+            print("ERROR: Invalid tolerance range")
+            return None, "Upper tolerance must be greater than lower tolerance"
         
-        if target_std > 0 and target_mean > 0:
-            # Method of moments: k = mean²/var, θ = var/mean
-            k_prior = (target_mean / target_std) ** 2
-            theta_prior = target_std ** 2 / target_mean
+        print(f"Processing distribution: {distribution}")
+        
+        if distribution == "normal":
+            print("NORMAL DISTRIBUTION PROCESSING")
+            mu_prior = nominal_f
+            sigma_mu = tolerance_range / 12
+            sigma_prior = tolerance_range / 6
+            alpha = 2.5
+            beta = (alpha - 1) * sigma_prior**2
             
-            # Set reasonable hyperpriors that don't dominate the data
-            alpha_k = 2.0  # Weak prior on shape
-            beta_k = 2.0 / k_prior  # Scale to center around k_prior
-            alpha_theta = 2.0  # Weak prior on scale
-            beta_theta = theta_prior  # Scale to center around theta_prior
+            result_params = {
+                'mu_prior': mu_prior,
+                'sigma_mu': sigma_mu,
+                'alpha': alpha,
+                'beta': beta,
+                'sigma_prior': sigma_prior
+            }
+            result = (result_params, None)
+            print(f"NORMAL RESULT: {result}")
+            return result
             
-            return {
-                'k_prior': k_prior,
-                'theta_prior': theta_prior,
-                'alpha_k': alpha_k,
-                'beta_k': beta_k,
-                'alpha_theta': alpha_theta,
-                'beta_theta': beta_theta
-            }, None
+        elif distribution == "gamma":
+            print("GAMMA DISTRIBUTION PROCESSING")
+            target_mean = nominal_f if nominal_f > 0 else 1.0
+            target_std = tolerance_range / 6
+            
+            if target_std > 0 and target_mean > 0:
+                k_prior = (target_mean / target_std) ** 2
+                theta_prior = target_std ** 2 / target_mean
+                alpha_k = 2.0
+                beta_k = 2.0 / k_prior
+                alpha_theta = 2.0
+                beta_theta = theta_prior
+                
+                result_params = {
+                    'k_prior': k_prior,
+                    'theta_prior': theta_prior,
+                    'alpha_k': alpha_k,
+                    'beta_k': beta_k,
+                    'alpha_theta': alpha_theta,
+                    'beta_theta': beta_theta
+                }
+                result = (result_params, None)
+                print(f"GAMMA RESULT: {result}")
+                return result
+            else:
+                print("ERROR: Invalid gamma parameters")
+                return None, "Invalid target mean or standard deviation for Gamma distribution"
+        
+        elif distribution == "lognormal":
+            print("LOGNORMAL DISTRIBUTION PROCESSING")
+            lower_bound = nominal_f + lower_tol_f
+            upper_bound = nominal_f + upper_tol_f
+            
+            if lower_bound <= 0:
+                shift = abs(lower_bound) + 0.01
+                lower_bound += shift
+                upper_bound += shift
+                nominal_shifted = nominal_f + shift
+            else:
+                nominal_shifted = nominal_f
+                shift = 0
+                
+            log_nominal = np.log(nominal_shifted)
+            log_range = np.log(upper_bound) - np.log(lower_bound)
+            
+            mu_prior = log_nominal
+            sigma_mu = log_range / 12
+            sigma_prior = log_range / 6
+            alpha = 2.5
+            beta = (alpha - 1) * sigma_prior**2
+            
+            result_params = {
+                'mu_prior': mu_prior,
+                'sigma_mu': sigma_mu,
+                'alpha': alpha,
+                'beta': beta,
+                'sigma_prior': sigma_prior,
+                'shift': shift
+            }
+            result = (result_params, None)
+            print(f"LOGNORMAL RESULT: {result}")
+            return result
+            
+        elif distribution == "uniform":
+            print("UNIFORM DISTRIBUTION PROCESSING")
+            a_prior = nominal_f + lower_tol_f - tolerance_range * 0.1
+            b_prior = nominal_f + upper_tol_f + tolerance_range * 0.1
+            sigma_a = tolerance_range / 12
+            sigma_b = tolerance_range / 12
+            
+            result_params = {
+                'a_prior': a_prior,
+                'b_prior': b_prior,
+                'sigma_a': sigma_a,
+                'sigma_b': sigma_b
+            }
+            result = (result_params, None)
+            print(f"UNIFORM RESULT: {result}")
+            return result
+            
         else:
-            return None, None
+            print(f"ERROR: Unsupported distribution: {distribution}")
+            return None, f"Unsupported distribution type: {distribution}"
             
-    elif distribution == "lognormal":
-        # Transform to log space and use normal conjugate updates
-        lower_bound = nominal + lower_tol
-        upper_bound = nominal + upper_tol
-        
-        if lower_bound <= 0:
-            # Shift to ensure positive values
-            shift = abs(lower_bound) + 0.01
-            lower_bound += shift
-            upper_bound += shift
-            nominal_shifted = nominal + shift
-        else:
-            nominal_shifted = nominal
-            
-        # Work in log space
-        log_nominal = np.log(nominal_shifted)
-        log_range = np.log(upper_bound) - np.log(lower_bound)
-        
-        mu_prior = log_nominal
-        sigma_mu = log_range / 12
-        sigma_prior = log_range / 6
-        
-        alpha = 2.5
-        beta = (alpha - 1) * sigma_prior**2
-        
-        return {
-            'mu_prior': mu_prior,
-            'sigma_mu': sigma_mu,
-            'alpha': alpha,
-            'beta': beta,
-            'sigma_prior': sigma_prior,
-            'shift': shift if lower_bound <= 0 else 0
-        }, None
-        
-    elif distribution == "uniform":
-        # Non-conjugate case - will need MCMC
-        a_prior = nominal + lower_tol - tolerance_range * 0.1
-        b_prior = nominal + upper_tol + tolerance_range * 0.1
-        sigma_a = tolerance_range / 12
-        sigma_b = tolerance_range / 12
-        
-        return {
-            'a_prior': a_prior,
-            'b_prior': b_prior,
-            'sigma_a': sigma_a,
-            'sigma_b': sigma_b
-        }, None
-        
-    return None, None
+    except Exception as e:
+        print(f"EXCEPTION in calculate_prior_parameters: {e}")
+        import traceback
+        traceback.print_exc()
+        return None, f"Exception in prior calculation: {str(e)}"
+    
+    print("=== FUNCTION END (should not reach here) ===")
+    return None, "Function ended unexpectedly"
 
 def bayesian_update_normal(data, prior_params):
     """Analytical Bayesian update for Normal distribution"""
@@ -324,3 +356,84 @@ def calculate_likelihood_params(data, distribution):
         return None, None
     
     return None, None
+
+def create_prior_from_posterior(distribution, post_para1, post_para2):
+    """Create prior parameters from previous posterior for sequential updating"""
+    try:
+        if distribution == "normal":
+            # For sequential Normal updates, use the posterior as the new prior
+            # Assume same uncertainty level as original prior
+            mu_prior = post_para1
+            sigma_mu = post_para2 * 0.1  # Use 10% of posterior std as prior uncertainty
+            sigma_prior = post_para2
+            
+            alpha = 2.5
+            beta = (alpha - 1) * sigma_prior**2
+            
+            return {
+                'mu_prior': mu_prior,
+                'sigma_mu': sigma_mu,
+                'alpha': alpha,
+                'beta': beta,
+                'sigma_prior': sigma_prior
+            }
+            
+        elif distribution == "gamma":
+            # For sequential Gamma updates
+            k_prior = post_para1
+            theta_prior = post_para2
+            
+            # Set reasonable hyperpriors for sequential update
+            alpha_k = 2.0
+            beta_k = 2.0 / k_prior
+            alpha_theta = 2.0
+            beta_theta = theta_prior
+            
+            return {
+                'k_prior': k_prior,
+                'theta_prior': theta_prior,
+                'alpha_k': alpha_k,
+                'beta_k': beta_k,
+                'alpha_theta': alpha_theta,
+                'beta_theta': beta_theta
+            }
+            
+        elif distribution == "lognormal":
+            # For sequential Lognormal updates
+            mu_prior = post_para1
+            sigma_mu = post_para2 * 0.1  # Use 10% as uncertainty
+            sigma_prior = post_para2
+            
+            alpha = 2.5
+            beta = (alpha - 1) * sigma_prior**2
+            
+            return {
+                'mu_prior': mu_prior,
+                'sigma_mu': sigma_mu,
+                'alpha': alpha,
+                'beta': beta,
+                'sigma_prior': sigma_prior,
+                'shift': 0  # Assume no shift for sequential updates
+            }
+            
+        elif distribution == "uniform":
+            # For sequential Uniform updates
+            a_prior = post_para1
+            b_prior = post_para2
+            range_val = b_prior - a_prior
+            sigma_a = range_val * 0.05  # 5% uncertainty
+            sigma_b = range_val * 0.05
+            
+            return {
+                'a_prior': a_prior,
+                'b_prior': b_prior,
+                'sigma_a': sigma_a,
+                'sigma_b': sigma_b
+            }
+            
+        else:
+            return None
+            
+    except Exception as e:
+        print(f"Error creating prior from posterior: {e}")
+        return None

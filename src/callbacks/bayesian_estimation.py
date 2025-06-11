@@ -12,7 +12,8 @@ from src.utils.bayesian_calculations import (
     bayesian_update_gamma, 
     bayesian_update_lognormal,
     bayesian_update_uniform,
-    calculate_likelihood_params
+    calculate_likelihood_params,
+    create_prior_from_posterior  # Added this import
 )
 
 def register_bayesian_callback(app):
@@ -48,6 +49,17 @@ def register_bayesian_callback(app):
             return no_update, no_update, no_update, no_update
             
         try:
+            # Get the index from the callback context first
+            from dash import callback_context
+            if callback_context.triggered:
+                prop_id = callback_context.triggered[0]['prop_id']
+                if '"index":' in prop_id:
+                    index = prop_id.split('"index":')[1].split(',')[0]
+                else:
+                    index = "0"  # fallback
+            else:
+                index = "0"  # fallback
+                
             # Parse the uploaded file
             content_type, content_string = contents.split(',')
             decoded = base64.b64decode(content_string)
@@ -90,11 +102,47 @@ def register_bayesian_callback(app):
                 error_msg = "Insufficient data points for Bayesian updating. Please provide at least 2 data points."
                 return "", "", False, error_msg
                 
-            # Calculate prior parameters from tolerances
-            prior_params, error = calculate_prior_parameters(distribution, nominal, upper_tol, lower_tol)
-            if prior_params is None:
-                error_msg = f"Error calculating prior parameters: {error or 'Invalid tolerance values'}"
-                return "", "", False, error_msg
+            # Calculate prior parameters from tolerances OR use previous posterior
+            dim_key = f"dim_{index}"
+            stored_dim = dimensions_store.get(dim_key, {})
+            
+            if stored_dim.get('bayes_applied', False):
+                # Sequential update: use previous posterior as new prior
+                previous_para1 = stored_dim.get('posterior_para1')
+                previous_para2 = stored_dim.get('posterior_para2')
+                
+                print(f"Sequential Bayesian Update - Using previous posterior as prior:")
+                print(f"Previous posterior: para1={previous_para1:.6f}, para2={previous_para2:.6f}")
+                
+                # Create prior parameters from previous posterior
+                prior_params = create_prior_from_posterior(distribution, previous_para1, previous_para2)
+                if prior_params is None:
+                    error_msg = "Error creating prior from previous posterior."
+                    return "", "", False, error_msg
+            else:
+                # First-time update: use tolerance-based prior
+                print(f"Debug: Calculating prior for {distribution}, nominal={nominal}, upper_tol={upper_tol}, lower_tol={lower_tol}")
+                
+                try:
+                    prior_result = calculate_prior_parameters(distribution, nominal, upper_tol, lower_tol)
+                    print(f"Debug: Prior calculation result: {prior_result}")
+                    
+                    if prior_result is None:
+                        error_msg = "Error: calculate_prior_parameters returned None"
+                        return "", "", False, error_msg
+                        
+                    if not isinstance(prior_result, tuple) or len(prior_result) != 2:
+                        error_msg = f"Error: calculate_prior_parameters returned invalid format: {type(prior_result)}"
+                        return "", "", False, error_msg
+                        
+                    prior_params, error = prior_result
+                    if prior_params is None:
+                        error_msg = f"Error calculating prior parameters: {error or 'Invalid tolerance values'}"
+                        return "", "", False, error_msg
+                        
+                except Exception as e:
+                    error_msg = f"Exception in calculate_prior_parameters: {str(e)}"
+                    return "", "", False, error_msg
                 
             # Perform Bayesian updating
             para1_post, para2_post = perform_bayesian_update(data, distribution, prior_params)
