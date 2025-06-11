@@ -158,9 +158,13 @@ def register_bayesian_callback(app):
                 # Store all parameters in dimensions store
                 if dim_key not in dimensions_store:
                     dimensions_store[dim_key] = {}
+
+                # Get current iteration count and increment it
+                current_iterations = dimensions_store[dim_key].get('bayes_iterations', 0) + 1
                     
                 dimensions_store[dim_key].update({
                     'bayes_applied': True,
+                    'bayes_iterations': current_iterations,  
                     'prior_para1': prior_params.get('mu_prior', prior_params.get('k_prior', prior_params.get('a_prior'))),
                     'prior_para2': prior_params.get('sigma_prior', prior_params.get('theta_prior', prior_params.get('b_prior'))),
                     'likelihood_para1': like_para1,

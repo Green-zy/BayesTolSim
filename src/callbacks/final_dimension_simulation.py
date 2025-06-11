@@ -23,9 +23,11 @@ def register_final_dimension_simulation_callback(app):
         Input({"type": "dim-para2", "index": ALL}, "value"),
         Input({"type": "dim-dir", "index": ALL}, "value"),
         State("num-samples-input", "value"),
+        State("final-dim-tol-upper", "value"),  # Added final dimension tolerances
+        State("final-dim-tol-lower", "value"),  # Added final dimension tolerances
         prevent_initial_call=True
     )
-    def update_final_dimension_simulation(n_clicks, names, dists, para1s, para2s, dirs, num_samples):
+    def update_final_dimension_simulation(n_clicks, names, dists, para1s, para2s, dirs, num_samples, final_upper_tol, final_lower_tol):
         # Check if dimensions are properly set
         if not names or all(v in [None, "", []] for v in names):
             return [
@@ -103,7 +105,7 @@ def register_final_dimension_simulation_callback(app):
             
             # Create plot and statistics
             fig, x_data, y_data, cdf_data = create_final_dimension_plot_with_data(final_samples)
-            stats_text = calculate_final_dimension_statistics(final_samples, num_samples)
+            stats_text = calculate_final_dimension_statistics(final_samples, num_samples, final_upper_tol, final_lower_tol, names, dirs)
             
             # Store data for hover handling
             app._final_simulation_data = {
@@ -483,103 +485,8 @@ def create_original_plot_from_stored_data(stored_data):
     except Exception as e:
         print(f"Error creating original plot: {e}")
         return go.Figure()
-    """Create the final dimension distribution plot"""
-    try:
-        # Calculate histogram for the samples
-        n_bins = min(50, max(10, len(final_samples) // 100))
-        counts, bin_edges = np.histogram(final_samples, bins=n_bins)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        bin_widths = bin_edges[1:] - bin_edges[:-1]
-        total_area = np.sum(counts * bin_widths)
-        densities = counts / total_area
-        
-        # Create x range for smooth curve
-        x_min, x_max = np.min(final_samples), np.max(final_samples)
-        x_range = x_max - x_min
-        x_min -= x_range * 0.1
-        x_max += x_range * 0.1
-        x_smooth = np.linspace(x_min, x_max, 500)
-        
-        # Fit kernel density estimation for smooth curve
-        from scipy.stats import gaussian_kde
-        kde = gaussian_kde(final_samples)
-        y_smooth = kde(x_smooth)
-        
-        # Calculate CDF for hover information
-        cdf_values = []
-        for x_val in x_smooth:
-            cdf_val = np.sum(final_samples <= x_val) / len(final_samples)
-            cdf_values.append(cdf_val)
-        
-        # Create figure
-        fig = go.Figure()
-        
-        # Add the purple curve with hover information and hover detection
-        fig.add_trace(go.Scatter(
-            x=x_smooth,
-            y=y_smooth,
-            mode="lines",
-            name="Final Dimension Distribution",
-            line=dict(width=3, color="purple"),
-            hovertemplate="<b>Value:</b> %{x:.4f}<br><b>Density:</b> %{y:.4f}<br><b>CDF:</b> %{customdata:.4f}<extra></extra>",  # Removed click instruction
-            customdata=cdf_values
-        ))
-        
-        fig.update_layout(
-            title="Monte Carlo Simulation - Final Dimension Distribution",
-            margin=dict(l=40, r=20, t=60, b=40),
-            xaxis_title="Final Dimension Value",
-            yaxis_title="Probability Density",
-            height=400,
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            font=dict(size=12),
-            title_font_size=14,
-            showlegend=False
-        )
-        
-        # Add grid lines
-        fig.update_xaxes(
-            showgrid=True, 
-            gridwidth=0.8, 
-            gridcolor='rgba(180,180,180,0.4)',
-            zeroline=True,
-            zerolinewidth=1,
-            zerolinecolor='rgba(100,100,100,0.6)'
-        )
-        fig.update_yaxes(
-            showgrid=True, 
-            gridwidth=0.8, 
-            gridcolor='rgba(180,180,180,0.4)',
-            zeroline=True,
-            zerolinewidth=1,
-            zerolinecolor='rgba(100,100,100,0.6)'
-        )
-        
-        return fig
-        
-    except Exception as e:
-        print(f"Plot creation error: {e}")
-        # Return empty figure with error message
-        fig = go.Figure()
-        fig.update_layout(
-            xaxis=dict(visible=False),
-            yaxis=dict(visible=False),
-            plot_bgcolor="white",
-            margin=dict(l=40, r=40, t=40, b=40),
-            height=400
-        )
-        fig.add_annotation(
-            text=f"Error creating plot: {str(e)}",
-            xref="paper", yref="paper",
-            x=0.5, y=0.5,
-            showarrow=False,
-            font=dict(size=14, color="red"),
-            align="center"
-        )
-        return fig
 
-def calculate_final_dimension_statistics(final_samples, num_samples):
+def calculate_final_dimension_statistics(final_samples, num_samples, final_upper_tol=None, final_lower_tol=None, names=None, dirs=None):
     """Calculate and format statistics for final dimension"""
     try:
         mean_val = np.mean(final_samples)
@@ -600,6 +507,62 @@ Max: {max_val:.4f}
 5th Percentile: {p5:.4f}
 95th Percentile: {p95:.4f}
 Range (95%): {p95 - p5:.4f}"""
+
+        # Add process capability indices if tolerances are provided
+        if final_upper_tol is not None and final_lower_tol is not None:
+            try:
+                upper_tol_val = float(final_upper_tol)
+                lower_tol_val = float(final_lower_tol)
+                
+                # Calculate final dimension nominal by summing individual dimension nominals with directions
+                final_nominal = 0.0
+                
+                if names and dirs:
+                    for i in range(len(names)):
+                        if names[i] is not None:
+                            dim_key = f"dim_{i}"
+                            dim_data = dimensions_store.get(dim_key, {})
+                            
+                            # Get nominal value from store
+                            nominal = dim_data.get('nominal')
+                            if nominal is not None:
+                                try:
+                                    nominal_val = float(nominal)
+                                    # Get direction from dirs parameter
+                                    direction = dirs[i] if i < len(dirs) and dirs[i] is not None else "+"
+                                    
+                                    if direction == '-':
+                                        final_nominal -= nominal_val
+                                    else:
+                                        final_nominal += nominal_val
+                                except (ValueError, TypeError):
+                                    continue
+                
+                # Calculate specification limits
+                USL = final_nominal + upper_tol_val  # Upper Specification Limit
+                LSL = final_nominal + lower_tol_val  # Lower Specification Limit
+                
+                # Calculate process capability indices
+                if std_val > 0:
+                    # Cp = (USL - LSL) / (6 * sigma)
+                    Cp = (USL - LSL) / (6 * std_val)
+                    
+                    # Cpk = min((USL - mean)/(3*sigma), (mean - LSL)/(3*sigma))
+                    Cpu = (USL - mean_val) / (3 * std_val)  # Upper capability
+                    Cpl = (mean_val - LSL) / (3 * std_val)  # Lower capability
+                    Cpk = min(Cpu, Cpl)
+                    
+                    # Add capability indices to the statistics text
+                    stats_text += f"\nCp: {Cp:.3f}\nCpk: {Cpk:.3f}"
+                else:
+                    stats_text += f"\nCp: Cannot calculate (std=0)\nCpk: Cannot calculate (std=0)"
+                    
+            except (ValueError, TypeError):
+                # If there's an error converting tolerances to float
+                stats_text += f"\nCp: Error in tolerance values\nCpk: Error in tolerance values"
+        else:
+            # No tolerances provided
+            stats_text += f"\nCp: Please set tolerance in final dimension\nCpk: Please set tolerance in final dimension"
         
         return stats_text
         

@@ -69,9 +69,10 @@ def register_view_dim_distribution_callback(app):
         except:
             return 0, 1
 
-    def _format_statistics(dist_name, para1, para2, curve_type=""):
+    def _format_statistics(dist_name, para1, para2, curve_type="", dim_key=None):
         """Format statistics text for a distribution"""
         try:
+            # Calculate basic distribution statistics
             if dist_name == "normal":
                 mean = para1
                 std = para2
@@ -103,7 +104,54 @@ def register_view_dim_distribution_callback(app):
                 
             else:
                 stats_text = f"{curve_type}Unsupported distribution: {dist_name}"
+                return stats_text
+            
+            # Add process capability indices if we have dimension key and tolerance data
+            if dim_key is not None:
+                dim_data = dimensions_store.get(dim_key, {})
+                nominal = dim_data.get("nominal")
+                upper_tol = dim_data.get("upper_tol") 
+                lower_tol = dim_data.get("lower_tol")
                 
+                # Also check if tolerances are stored with different key names
+                if nominal is None:
+                    # Try to get from the dimension index
+                    dim_index = dim_key.split('_')[1] if '_' in dim_key else '0'
+                    # Search through all dimensions to find matching tolerance data
+                    for key, data in dimensions_store.items():
+                        if key == dim_key and 'nominal' in data:
+                            nominal = data.get('nominal')
+                            upper_tol = data.get('upper_tol')
+                            lower_tol = data.get('lower_tol')
+                            break
+                
+                if nominal is not None and upper_tol is not None and lower_tol is not None:
+                    try:
+                        nominal_val = float(nominal)
+                        upper_tol_val = float(upper_tol)
+                        lower_tol_val = float(lower_tol)
+                        
+                        # Calculate specification limits
+                        USL = nominal_val + upper_tol_val  # Upper Specification Limit
+                        LSL = nominal_val + lower_tol_val  # Lower Specification Limit
+                        
+                        # Calculate process capability indices
+                        if std > 0:
+                            # Cp = (USL - LSL) / (6 * sigma)
+                            Cp = (USL - LSL) / (6 * std)
+                            
+                            # Cpk = min((USL - mean)/(3*sigma), (mean - LSL)/(3*sigma))
+                            Cpu = (USL - mean) / (3 * std)  # Upper capability
+                            Cpl = (mean - LSL) / (3 * std)  # Lower capability
+                            Cpk = min(Cpu, Cpl)
+                            
+                            # Add capability indices to the statistics text
+                            stats_text += f"\nCp: {Cp:.3f}\nCpk: {Cpk:.3f}"
+                        
+                    except (ValueError, TypeError) as e:
+                        # If there's an error converting to float, skip capability calculation
+                        pass
+                        
             return stats_text
         except Exception as e:
             return f"{curve_type}Error calculating statistics: {str(e)}"
@@ -126,8 +174,8 @@ def register_view_dim_distribution_callback(app):
                 xaxis=dict(visible=False),
                 yaxis=dict(visible=False),
                 plot_bgcolor="white",
-                margin=dict(l=40, r=40, t=40, b=40),
-                height=450,
+                margin=dict(l=40, r=40, t=40, b=20),  # Reduced bottom margin
+                height=380,  # Reduced height to make room for text
                 width=600
             )
             fig.add_annotation(
@@ -159,8 +207,8 @@ def register_view_dim_distribution_callback(app):
                 xaxis=dict(visible=False),
                 yaxis=dict(visible=False),
                 plot_bgcolor="white",
-                margin=dict(l=40, r=40, t=40, b=40),
-                height=450,
+                margin=dict(l=40, r=40, t=40, b=20),  # Reduced bottom margin
+                height=380,  # Reduced height
                 width=600
             )
             fig.add_annotation(
@@ -179,8 +227,8 @@ def register_view_dim_distribution_callback(app):
                 xaxis=dict(visible=False),
                 yaxis=dict(visible=False),
                 plot_bgcolor="white",
-                margin=dict(l=40, r=40, t=40, b=40),
-                height=450,
+                margin=dict(l=40, r=40, t=40, b=20),  # Reduced bottom margin
+                height=380,  # Reduced height
                 width=600
             )
             fig.add_annotation(
@@ -330,11 +378,11 @@ def register_view_dim_distribution_callback(app):
                 # Prepare combined statistics
                 stats_text = ""
                 if prior_para1 is not None and prior_para2 is not None:
-                    stats_text += "=== PRIOR ===\n" + _format_statistics(dist_name, prior_para1, prior_para2) + "\n\n"
+                    stats_text += "=== PRIOR ===\n" + _format_statistics(dist_name, prior_para1, prior_para2, dim_key=selected_dim_key) + "\n\n"
                 if likelihood_para1 is not None and likelihood_para2 is not None:
-                    stats_text += "=== LIKELIHOOD ===\n" + _format_statistics(dist_name, likelihood_para1, likelihood_para2) + "\n\n"
+                    stats_text += "=== LIKELIHOOD ===\n" + _format_statistics(dist_name, likelihood_para1, likelihood_para2, dim_key=selected_dim_key) + "\n\n"
                 if posterior_para1 is not None and posterior_para2 is not None:
-                    stats_text += "=== POSTERIOR ===\n" + _format_statistics(dist_name, posterior_para1, posterior_para2)
+                    stats_text += "=== POSTERIOR ===\n" + _format_statistics(dist_name, posterior_para1, posterior_para2, dim_key=selected_dim_key)
                 
                 title_text = f"Bayesian Analysis of Dimension '{dim_name}'"
                 
@@ -404,7 +452,7 @@ def register_view_dim_distribution_callback(app):
                     customdata=_calculate_cdf(x, dist_name, mle_para1, mle_para2)
                 ))
                 
-                stats_text = "=== MLE FIT ===\n" + _format_statistics(dist_name, mle_para1, mle_para2)
+                stats_text = "=== MLE FIT ===\n" + _format_statistics(dist_name, mle_para1, mle_para2, dim_key=selected_dim_key)
                 if mle_data:
                     stats_text += f"\n\n=== DATA SUMMARY ===\nSample Size: {len(mle_data)}\nSample Mean: {np.mean(mle_data):.3f}\nSample Std: {np.std(mle_data, ddof=1):.3f}\nMin: {np.min(mle_data):.3f}\nMax: {np.max(mle_data):.3f}"
                 title_text = f"MLE Analysis of Dimension '{dim_name}'"
@@ -424,15 +472,15 @@ def register_view_dim_distribution_callback(app):
                     customdata=_calculate_cdf(x, dist_name, para1, para2)
                 ))
                 
-                stats_text = _format_statistics(dist_name, para1, para2)
+                stats_text = _format_statistics(dist_name, para1, para2, dim_key=selected_dim_key)
                 title_text = f"Probability Density Function of Dimension '{dim_name}'"
             
             fig.update_layout(
                 title=title_text,
-                margin=dict(l=40, r=20, t=60, b=40),
+                margin=dict(l=40, r=20, t=60, b=20),  # Reduced bottom margin from 40 to 20
                 xaxis_title="Value",
                 yaxis_title="Probability Density",
-                height=450,
+                height=380,  # Reduced height from 450 to 380 to make room for text
                 width=600,
                 plot_bgcolor="white",
                 paper_bgcolor="white",

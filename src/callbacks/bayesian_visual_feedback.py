@@ -1,7 +1,8 @@
 # src/callbacks/bayesian_visual_feedback.py
 
-from dash import Input, Output, MATCH, html
+from dash import Input, Output, MATCH, html, callback_context
 import dash_bootstrap_components as dbc
+from src.stores.global_store import dimensions_store
 
 def register_bayesian_visual_feedback_callback(app):
     @app.callback(
@@ -12,6 +13,21 @@ def register_bayesian_visual_feedback_callback(app):
         prevent_initial_call=True
     )
     def update_bayesian_visual_feedback(bayes_success, error_message):
+        # Get the dimension index from callback context
+        if callback_context.triggered:
+            prop_id = callback_context.triggered[0]['prop_id']
+            if '"index":' in prop_id:
+                index = prop_id.split('"index":')[1].split(',')[0]
+            else:
+                index = "0"
+        else:
+            index = "0"
+            
+        # Get iteration count from store
+        dim_key = f"dim_{index}"
+        stored_dim = dimensions_store.get(dim_key, {})
+        bayes_iterations = stored_dim.get('bayes_iterations', 0)
+        
         # Only show error state if there's an actual error message (not empty string)
         if error_message and error_message.strip():
             # Show error state - red background
@@ -28,11 +44,12 @@ def register_bayesian_visual_feedback_callback(app):
                 "transition": "all 0.3s ease",
                 "fontWeight": "bold"
             }
-        elif bayes_success:
-            # Bayesian update was successful - blue background with Bayesian icon
+        elif bayes_success and bayes_iterations > 0:
+            # Bayesian update was successful - blue background with iteration count
+            iteration_text = f"{bayes_iterations} Bayes Applied" if bayes_iterations > 1 else "1 Bayes Applied"
             return [
                 html.Span("⚡", style={"color": "white", "fontWeight": "bold", "marginRight": "5px"}),
-                "Bayes Applied"
+                iteration_text
             ], {
                 "border": "2px solid #007bff", 
                 "backgroundColor": "#007bff",

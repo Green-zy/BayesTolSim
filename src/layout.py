@@ -32,6 +32,25 @@ layout = dbc.Container([
     dbc.Card([
         dbc.CardBody([
             html.H4("Current Dimension Chain"),
+            html.Div([
+                html.Div([
+                    html.Label("Tolerance for final dimension:", style={"fontWeight": "bold", "marginRight": "15px", "alignSelf": "center"}),
+                    dcc.Input(
+                        id="final-dim-tol-upper",
+                        placeholder="Upper Tolerance", 
+                        type="number", 
+                        className="form-control",
+                        style={"width": "165px", "marginRight": "10px"}
+                    ),
+                    dcc.Input(
+                        id="final-dim-tol-lower",
+                        placeholder="Lower Tolerance", 
+                        type="number", 
+                        className="form-control",
+                        style={"width": "165px"}
+                    )
+                ], style={"display": "flex", "alignItems": "center", "marginBottom": "15px"})
+            ]),
             html.Div(id="chain-summary-table"),
             dcc.Graph(id="chain-plot")
         ])
