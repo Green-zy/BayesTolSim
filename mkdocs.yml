@@ -1,0 +1,88 @@
+site_name: BayesTolSim Documentation
+site_description: Comprehensive guide for Bayesian Monte Carlo Tolerance Analysis
+site_author: Yun Zhou (Robbie)
+site_url: https://green-zy.github.io/BayesTolSim
+
+repo_name: Green-zy/BayesTolSim
+repo_url: https://github.com/Green-zy/BayesTolSim
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - User Guide:
+    - Dashboard Overview: user-guide/dashboard-overview.md
+    - Dimension Setup: user-guide/dimension-setup.md
+    - Distribution Analysis: user-guide/distribution-analysis.md
+    - Monte Carlo Simulation: user-guide/monte-carlo.md
+  - Examples:
+    - Basic Example: examples/basic-example.md
+    - Production Data (MLE): examples/mle-example.md
+    - Trial Data (Bayesian): examples/bayesian-example.md
+  - Reference:
+    - Statistical Methods: methods/six-sigma.md
+    - MLE Theory: methods/mle.md
+    - Bayesian Theory: methods/bayesian.md
+    - Distribution Types: reference/distributions.md
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Green-zy
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/yun-zhou-robbie-172966187
+    - icon: fontawesome/solid/envelope
+      link: mailto:robbiezhou1@gmail.com
