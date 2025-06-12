@@ -505,8 +505,7 @@ Median: {median_val:.4f}
 Min: {min_val:.4f}
 Max: {max_val:.4f}
 5th Percentile: {p5:.4f}
-95th Percentile: {p95:.4f}
-Range (95%): {p95 - p5:.4f}"""
+95th Percentile: {p95:.4f}"""
 
         # Add process capability indices if tolerances are provided
         if final_upper_tol is not None and final_lower_tol is not None:
@@ -542,6 +541,11 @@ Range (95%): {p95 - p5:.4f}"""
                 USL = final_nominal + upper_tol_val  # Upper Specification Limit
                 LSL = final_nominal + lower_tol_val  # Lower Specification Limit
                 
+                # Calculate CDF values at LSL and USL using the simulation data
+                cdf_at_lsl = np.sum(final_samples <= LSL) / len(final_samples)
+                cdf_at_usl = np.sum(final_samples <= USL) / len(final_samples)
+                cdf_right_of_usl = 1 - cdf_at_usl
+                
                 # Calculate process capability indices
                 if std_val > 0:
                     # Cp = (USL - LSL) / (6 * sigma)
@@ -552,17 +556,33 @@ Range (95%): {p95 - p5:.4f}"""
                     Cpl = (mean_val - LSL) / (3 * std_val)  # Lower capability
                     Cpk = min(Cpu, Cpl)
                     
-                    # Add capability indices to the statistics text
-                    stats_text += f"\nCp: {Cp:.3f}\nCpk: {Cpk:.3f}"
+                    # Add capability indices and CDF values to the statistics text
+                    stats_text += f"""
+Cp: {Cp:.3f}
+Cpk: {Cpk:.3f}
+CDF left of LSL: {cdf_at_lsl:.4f}
+CDF right of USL: {cdf_right_of_usl:.4f}"""
                 else:
-                    stats_text += f"\nCp: Cannot calculate (std=0)\nCpk: Cannot calculate (std=0)"
+                    stats_text += f"""
+Cp: Cannot calculate (std=0)
+Cpk: Cannot calculate (std=0)
+CDF left of LSL: {cdf_at_lsl:.4f}
+CDF right of USL: {cdf_right_of_usl:.4f}"""
                     
             except (ValueError, TypeError):
                 # If there's an error converting tolerances to float
-                stats_text += f"\nCp: Error in tolerance values\nCpk: Error in tolerance values"
+                stats_text += f"""
+Cp: Error in tolerance values
+Cpk: Error in tolerance values
+CDF left of LSL: Error in tolerance values
+CDF right of USL: Error in tolerance values"""
         else:
             # No tolerances provided
-            stats_text += f"\nCp: Please set tolerance in final dimension\nCpk: Please set tolerance in final dimension"
+            stats_text += f"""
+Cp: Please set tolerance in final dimension
+Cpk: Please set tolerance in final dimension
+CDF left of LSL: Please set tolerance in final dimension
+CDF right of USL: Please set tolerance in final dimension"""
         
         return stats_text
         
