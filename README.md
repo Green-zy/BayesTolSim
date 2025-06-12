@@ -91,7 +91,7 @@ Combine **prior specs** with **trial samples measurements** for optimal estimate
 
 ---
 
-## 🚀 Usage Guide
+## Usage Guide
 
 ### 1. Six Sigma Analysis (Traditional)
 - Define dimensions with **nominal values** and **tolerances**
@@ -109,16 +109,16 @@ Combine **prior specs** with **trial samples measurements** for optimal estimate
 
 ### 3. Bayesian Analysis (Advanced)
 
-#### 🔹 Prior Setup
+#### Prior Setup
 - Input design specs (nominal ± tolerance) → defines **prior**
 - Select a distribution: Normal, Gamma, Lognormal, Uniform
 
-#### 🔹 Data Integration
+#### Data Integration
 - Upload prototype/trial data via **“Bayes Data”**
 - Bayesian updating happens automatically
 - See **Prior, Likelihood, Posterior** in a single plot
 
-#### 🔹 Sequential Learning
+#### Sequential Learning
 - Upload new data iteratively
 - Posterior updates and uncertainty reduces
 - Watch model **refine over time**
