@@ -123,7 +123,21 @@ Combine **prior specs** with **trial samples measurements** for optimal estimate
 - Posterior updates and uncertainty reduces
 - Watch model **refine over time**
 
-### 4. Comparative Insights
+### 4. csv Format Requirement
+
+> Each CSV file must contain **only one column**, and the column name must **exactly match the dimension name** defined in the chain.  
+> Example:
+>
+> ```csv
+> Dimension_Name
+> 10.0233
+> 9.9872
+> 10.0150
+> ...
+> ```
+> Including extra columns or mismatched names may result in an upload error.
+
+### 5. Comparative Insights
 - **Six Sigma vs. MLE**: Theory vs. real production data  
 - **Prior vs. Posterior**: See how data refines design expectations  
 - **Track process evolution** through Bayesian learning
