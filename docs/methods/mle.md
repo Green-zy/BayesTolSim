@@ -8,12 +8,12 @@ Maximum Likelihood Estimation transforms tolerance analysis from theoretical ass
 **Find the distribution parameters that make your observed data most likely to occur.**
 
 Mathematically, for data points x₁, x₂, ..., xₙ:
-$$L(\theta) = \prod_{i=1}^{n} f(x_i; \theta)$$
+$L(\theta) = \prod_{i=1}^{n} f(x_i; \theta)$
 
-Where:
-- **L(θ)**: Likelihood function
-- **f(x; θ)**: Probability density function with parameters θ
-- **Goal**: Find θ that maximizes L(θ)
+Where:  
+- **L(θ)**: Likelihood function  
+- **f(x; θ)**: Probability density function with parameters θ  
+- **Goal**: Find θ that maximizes L(θ)  
 
 ### Why MLE Matters in Manufacturing
 - **Reality check**: Validates or challenges design assumptions
@@ -35,20 +35,20 @@ Dimension_Name
 ...
 ```
 
-**Critical requirements**:
-- **Single column**: Only measurement data
-- **Exact name match**: Column header must match dimension name exactly
-- **Sufficient data**: Minimum 20-30 samples for reliable estimates
-- **Quality data**: Representative of actual production conditions
+**Critical requirements**:  
+- **Single column**: Only measurement data  
+- **Exact name match**: Column header must match dimension name exactly  
+- **Sufficient data**: Minimum 20-30 samples for reliable estimates  
+- **Quality data**: Representative of actual production conditions  
 
 ### Distribution-Specific MLE
 
 === "Normal Distribution"
     **Analytical solution (closed form)**
     
-    **Parameters**:
-    - μ (mean): Sample average
-    - σ (standard deviation): Population standard deviation
+    **Parameters**:  
+    - μ (mean): Sample average  
+    - σ (standard deviation): Population standard deviation  
     
     **Formulas**:
     ```
@@ -61,9 +61,9 @@ Dimension_Name
 === "Gamma Distribution"
     **Method of moments approach**
     
-    **Parameters**:
-    - k (shape): Controls distribution shape
-    - θ (scale): Controls distribution spread
+    **Parameters**:  
+    - k (shape): Controls distribution shape  
+    - θ (scale): Controls distribution spread  
     
     **Formulas**:
     ```
@@ -79,9 +79,9 @@ Dimension_Name
 === "Lognormal Distribution"
     **Log-transformation to Normal**
     
-    **Parameters**:
-    - μ (location): Mean of log-transformed data
-    - σ (shape): Standard deviation of log-transformed data
+    **Parameters**:  
+    - μ (location): Mean of log-transformed data  
+    - σ (shape): Standard deviation of log-transformed data  
     
     **Formulas**:
     ```
@@ -95,9 +95,9 @@ Dimension_Name
 === "Uniform Distribution"
     **Simple bounds estimation**
     
-    **Parameters**:
-    - a (lower bound): Minimum value
-    - b (upper bound): Maximum value
+    **Parameters**:  
+    - a (lower bound): Minimum value  
+    - b (upper bound): Maximum value  
     
     **Formulas**:
     ```
@@ -148,11 +148,11 @@ Dimension_Name
     - **Measurement quality**: Calibrated, precise instruments
 
 ### Statistical Assumptions
-**MLE assumes**:
-- **Independent samples**: No systematic correlations
-- **Identically distributed**: Same underlying process
-- **Correct model**: Distribution choice is appropriate
-- **Stable process**: Parameters don't change over time
+**MLE assumes**:  
+- **Independent samples**: No systematic correlations  
+- **Identically distributed**: Same underlying process  
+- **Correct model**: Distribution choice is appropriate  
+- **Stable process**: Parameters don't change over time  
 
 ### Practical Limitations
 - **Historical snapshot**: Reflects past performance only
@@ -282,4 +282,4 @@ Shaft_Diameter
 
 ---
 
-**Next**: Learn how to combine MLE insights with design knowledge using [Bayesian Analysis](bayesian.md), or see MLE in action with our [Production Data Example](../examples/mle-example.md).
+**Next**: Learn how to combine MLE insights with design knowledge using [Bayesian Analysis](bayesian.md).

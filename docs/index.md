@@ -10,7 +10,7 @@ BayesTolSim provides three approaches to tolerance analysis:
 
 1. **Normal Analysis** - Traditional approach using design tolerances
 2. **MLE Analysis** - Fit distributions to production measurement data  
-3. **Bayesian Analysis** - Combine design specs with trial data
+3. **Bayesian Analysis** - Combine design specs with trial sample data
 
 ## Key Features
 
@@ -83,4 +83,4 @@ Built with Dash, Plotly, SciPy, and PyMC for statistical computing.
 
 ---
 
-**Ready to get started?** Head to the [Getting Started Guide](getting-started.md) or jump into a [Basic Example](examples/basic-example.md).
+**Ready to get started?** Head to the [Getting Started Guide](getting-started.md).

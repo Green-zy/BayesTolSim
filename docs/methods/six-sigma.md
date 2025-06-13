@@ -16,9 +16,9 @@ Where:
 ### The 6σ Rule
 **Principle**: 99.73% of normally distributed values fall within ±3σ of the mean
 
-**Tolerance interpretation**: If total tolerance range = 6σ, then:
-- **σ = tolerance range / 6**
-- **Process naturally stays within specifications**
+**Tolerance interpretation**: If total tolerance range = 6σ, then:  
+- **σ = tolerance range / 6**  
+- **Process naturally stays within specifications**  
 
 ## Parameter Calculation
 
@@ -52,25 +52,25 @@ Calculation:
 
 ### Cp (Process Capability Index)
 **Formula**:
-$$Cp = \frac{USL - LSL}{6\sigma}$$
+$Cp = \frac{USL - LSL}{6\sigma}$
 
-**Interpretation**:
-- **Cp > 1.33**: Capable process (Six Sigma standard)
-- **Cp = 1.0**: Process spread equals specification spread
-- **Cp < 1.0**: Incapable process
+**Interpretation**:  
+- **Cp > 1.33**: Capable process (Six Sigma standard)  
+- **Cp = 1.0**: Process spread equals specification spread  
+- **Cp < 1.0**: Incapable process  
 
 ### Cpk (Process Capability with Centering)
 **Formula**:
-$$Cpk = \min\left(\frac{USL - \mu}{3\sigma}, \frac{\mu - LSL}{3\sigma}\right)$$
+$Cpk = \min\left(\frac{USL - \mu}{3\sigma}, \frac{\mu - LSL}{3\sigma}\right)$
 
-Where:
-- **USL**: Upper Specification Limit = Nominal + Upper tolerance
-- **LSL**: Lower Specification Limit = Nominal + Lower tolerance
+Where:  
+- **USL**: Upper Specification Limit = Nominal + Upper tolerance  
+- **LSL**: Lower Specification Limit = Nominal + Lower tolerance  
 
-**Interpretation**:
-- **Cpk = Cp**: Process perfectly centered
-- **Cpk < Cp**: Process off-center
-- **Cpk < 1.0**: Process incapable even if Cp > 1.0
+**Interpretation**:  
+- **Cpk = Cp**: Process perfectly centered  
+- **Cpk < Cp**: Process off-center  
+- **Cpk < 1.0**: Process incapable even if Cp > 1.0  
 
 ## Advantages of Six Sigma Method
 
@@ -92,22 +92,22 @@ Where:
 ## Limitations and Considerations
 
 ### Distribution Assumptions
-**Real processes may not be normal**:
-- **Skewed distributions**: Tool wear, material properties
-- **Bounded processes**: Physical limits create non-normal behavior
-- **Multi-modal**: Multiple process settings or suppliers
+**Real processes may not be normal**:  
+- **Skewed distributions**: Tool wear, material properties  
+- **Bounded processes**: Physical limits create non-normal behavior  
+- **Multi-modal**: Multiple process settings or suppliers  
 
 ### Process Variations
-**Six Sigma assumes stable processes**:
-- **Time-varying parameters**: Tool wear, temperature effects
-- **Batch-to-batch variation**: Material lot differences
-- **Setup variations**: Operator and equipment differences
+**Six Sigma assumes stable processes**:  
+- **Time-varying parameters**: Tool wear, temperature effects  
+- **Batch-to-batch variation**: Material lot differences  
+- **Setup variations**: Operator and equipment differences  
 
 ### Tolerance Allocation
-**Equal emphasis on all dimensions**:
-- **Critical vs. non-critical**: Some dimensions more important
-- **Cost implications**: Tighter tolerances increase manufacturing cost
-- **Interaction effects**: Dimension correlations not considered
+**Equal emphasis on all dimensions**:  
+- **Critical vs. non-critical**: Some dimensions more important  
+- **Cost implications**: Tighter tolerances increase manufacturing cost  
+- **Interaction effects**: Dimension correlations not considered  
 
 ## When to Use Six Sigma Method
 
@@ -134,10 +134,10 @@ Where:
     - Regulatory requirements mandate approach
 
 ### Enhancement Opportunities
-**Six Sigma can be enhanced by**:
-- **Data validation**: Use MLE to verify normal assumption
-- **Bayesian integration**: Combine with trial data
-- **Sequential improvement**: Start with Six Sigma, refine with data
+**Six Sigma can be enhanced by**:  
+- **Data validation**: Use MLE to verify normal assumption  
+- **Bayesian integration**: Combine with trial data  
+- **Sequential improvement**: Start with Six Sigma, refine with data  
 
 ## Implementation in BayesTolSim
 
@@ -149,16 +149,16 @@ Where:
 5. **Monte Carlo**: Simulate final dimension behavior
 
 ### Manual Override
-**Custom parameter entry**:
-- Override automatic calculations
-- Use process-specific knowledge
-- Apply empirical correction factors
+**Custom parameter entry**:  
+- Override automatic calculations  
+- Use process-specific knowledge  
+- Apply empirical correction factors  
 
 ### Integration with Other Methods
-**Six Sigma as baseline**:
-- Compare with MLE results
-- Use as Bayesian prior
-- Validate assumptions with data
+**Six Sigma as baseline**:  
+- Compare with MLE results  
+- Use as Bayesian prior  
+- Validate assumptions with data  
 
 ---
 

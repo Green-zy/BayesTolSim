@@ -9,20 +9,20 @@ Bayesian analysis represents the pinnacle of statistical sophistication in toler
 
 **Core principle**: Update beliefs systematically as new evidence becomes available.
 
-**Mathematical framework**:
-$$P(\theta | data) = \frac{P(data | \theta) \times P(\theta)}{P(data)}$$
+**Mathematical framework**:  
+$P(\theta | data) = \frac{P(data | \theta) \times P(\theta)}{P(data)}$
 
-Where:
-- **P(θ|data)**: Posterior (updated knowledge)
-- **P(data|θ)**: Likelihood (what data tells us)
-- **P(θ)**: Prior (initial knowledge)
-- **P(data)**: Evidence (normalization constant)
+Where:  
+- **P(θ|data)**: Posterior (updated knowledge)  
+- **P(data|θ)**: Likelihood (what data tells us)  
+- **P(θ)**: Prior (initial knowledge)  
+- **P(data)**: Evidence (normalization constant)  
 
 ### Why Bayesian for Manufacturing?
-- **Incorporates engineering knowledge**: Design specifications become meaningful priors
-- **Quantifies uncertainty**: Full probability distributions, not just point estimates
-- **Sequential learning**: Continuously improves with new data
-- **Optimal information fusion**: Mathematically best way to combine information sources
+- **Incorporates engineering knowledge**: Design specifications become meaningful priors  
+- **Quantifies uncertainty**: Full probability distributions, not just point estimates  
+- **Sequential learning**: Continuously improves with new data  
+- **Optimal information fusion**: Mathematically best way to combine information sources  
 
 ## Bayesian Workflow in BayesTolSim
 
@@ -43,10 +43,10 @@ Design tolerances automatically become Bayesian priors:
     β = (α - 1) × σ_prior²  (scale parameter)
     ```
     
-    **Interpretation**: 
-    - Mean centered on design nominal
-    - Uncertainty reflects tolerance range
-    - Moderately informative prior
+    **Interpretation**:  
+    - Mean centered on design nominal  
+    - Uncertainty reflects tolerance range  
+    - Moderately informative prior  
 
 === "Gamma Distribution Prior"
     **Method of moments → Gamma-Inverse-Gamma prior**
@@ -59,21 +59,21 @@ Design tolerances automatically become Bayesian priors:
     β_k = 2.0 / k_prior  (scale hyperparameter)
     ```
 
-### Stage 2: Likelihood from Data
-**What the trial/prototype data suggests**
+### Stage 2: Likelihood from Data  
+**What the trial/prototype data suggests**  
 
-#### Data Processing
-Trial measurements provide likelihood information:
-- **Sample size**: Typically 10-50 prototype measurements
-- **Quality**: Representative of intended production process
-- **Independence**: No systematic correlations between samples
+#### Data Processing  
+Trial measurements provide likelihood information:  
+- **Sample size**: Typically 10-50 prototype measurements  
+- **Quality**: Representative of intended production process  
+- **Independence**: No systematic correlations between samples  
 
-#### Likelihood Calculation
-For each distribution, data likelihood computed using:
-- **Normal**: Standard normal likelihood with sample mean and variance
-- **Gamma**: Gamma likelihood using method of moments
-- **Lognormal**: Normal likelihood on log-transformed data
-- **Uniform**: Constrained likelihood respecting data bounds
+#### Likelihood Calculation  
+For each distribution, data likelihood computed using:  
+- **Normal**: Standard normal likelihood with sample mean and variance  
+- **Gamma**: Gamma likelihood using method of moments  
+- **Lognormal**: Normal likelihood on log-transformed data  
+- **Uniform**: Constrained likelihood respecting data bounds  
 
 ### Stage 3: Posterior Computation
 **Optimal combination of prior and likelihood**
@@ -109,7 +109,7 @@ For mathematically convenient cases:
     Transform results back to original scale
     ```
 
-#### Non-Conjugate Updating (MCMC)
+#### Non-Conjugate Updating, Markov Chain Monte Carlo (MCMC)
 For complex cases like Uniform distribution:
 
 === "Uniform Distribution"
@@ -138,32 +138,34 @@ For complex cases like Uniform distribution:
 #### First Update: Prior → Posterior₁
 ```
 Prior (Design specs) + Data₁ → Posterior₁
-```
-- Combines engineering knowledge with initial trials
-- Reduces parameter uncertainty
-- Provides updated process understanding
+```  
+
+- Combines engineering knowledge with initial trials  
+- Reduces parameter uncertainty  
+- Provides updated process understanding  
 
 #### Second Update: Posterior₁ → Posterior₂
 ```
 Posterior₁ (Previous knowledge) + Data₂ → Posterior₂
 ```
-- Previous posterior becomes new prior
-- Additional data further refines estimates
-- Uncertainty continues to decrease
 
-#### Convergence Properties
-**As data accumulates**:
-- **Parameter estimates stabilize**: Central tendency converges
-- **Uncertainty decreases**: Confidence intervals narrow
-- **Robustness increases**: Less sensitive to individual data points
-- **Predictive accuracy improves**: Better forecasting capability
+- Previous posterior becomes new prior  
+- Additional data further refines estimates  
+- Uncertainty continues to decrease  
 
-### Mathematical Properties
-**Theoretical guarantees**:
-- **Coherence**: Consistent probability updating
-- **Optimality**: Minimizes expected loss under reasonable criteria
-- **Robustness**: Graceful handling of model uncertainty
-- **Calibration**: Uncertainty quantification is well-calibrated
+#### Convergence Properties  
+**As data accumulates**:  
+- **Parameter estimates stabilize**: Central tendency converges  
+- **Uncertainty decreases**: Confidence intervals narrow  
+- **Robustness increases**: Less sensitive to individual data points  
+- **Predictive accuracy improves**: Better forecasting capability  
+
+### Mathematical Properties  
+**Theoretical guarantees**:  
+- **Coherence**: Consistent probability updating  
+- **Optimality**: Minimizes expected loss under reasonable criteria  
+- **Robustness**: Graceful handling of model uncertainty  
+- **Calibration**: Uncertainty quantification is well-calibrated  
 
 ## Three-Curve Visualization
 
@@ -172,41 +174,41 @@ Posterior₁ (Previous knowledge) + Data₂ → Posterior₂
 === "Prior Curve (Blue)"
     **Engineering knowledge before seeing data**
     
-    **Characteristics**:
-    - Center: Design nominal
-    - Spread: Engineering uncertainty
-    - Shape: Design assumptions
+    **Characteristics**:  
+    - Center: Design nominal  
+    - Spread: Engineering uncertainty  
+    - Shape: Design assumptions  
     
-    **Interpretation**:
-    - "What we expected based on specifications"
-    - Reflects tolerance analysis and engineering judgment
-    - May be optimistic or conservative
+    **Interpretation**:  
+    - "What we expected based on specifications"  
+    - Reflects tolerance analysis and engineering judgment  
+    - May be optimistic or conservative  
 
-=== "Likelihood Curve (Orange)"
+=== "Likelihood Curve (Orange)"  
     **What the data suggests**
     
-    **Characteristics**:
-    - Center: Sample mean
-    - Spread: Sample variability
-    - Shape: Empirical distribution
+    **Characteristics**:  
+    - Center: Sample mean  
+    - Spread: Sample variability  
+    - Shape: Empirical distribution  
     
-    **Interpretation**:
-    - "What actually happened in trials"
-    - Reflects prototype/trial manufacturing reality
-    - Independent of design expectations
+    **Interpretation**:  
+    - "What actually happened in trials"  
+    - Reflects prototype/trial manufacturing reality  
+    - Independent of design expectations  
 
 === "Posterior Curve (Green)"
     **Optimal combination of knowledge and evidence**
     
-    **Characteristics**:
-    - Center: Weighted average of prior and likelihood
-    - Spread: Reduced uncertainty (narrower than either prior or likelihood)
-    - Shape: Refined understanding
+    **Characteristics**:  
+    - Center: Weighted average of prior and likelihood  
+    - Spread: Reduced uncertainty (narrower than either prior or likelihood)  
+    - Shape: Refined understanding  
     
-    **Interpretation**:
-    - "Best estimate combining all available information"
-    - More confident than either source alone
-    - Balanced between design intent and empirical evidence
+    **Interpretation**:  
+    - "Best estimate combining all available information"  
+    - More confident than either source alone  
+    - Balanced between design intent and empirical evidence  
 
 ### Visual Interpretation Guide
 
@@ -260,45 +262,45 @@ Posterior₁ (Previous knowledge) + Data₂ → Posterior₂
 === "Prior Specification"
     **Subjectivity in prior choice**
     
-    **Issues**:
-    - How confident should prior be?
-    - What if design assumptions are wrong?
-    - How to handle conflicting expert opinions?
+    **Issues**:  
+    - How confident should prior be?  
+    - What if design assumptions are wrong?  
+    - How to handle conflicting expert opinions?  
     
-    **Mitigation**:
-    - Sensitivity analysis with different priors
-    - Use relatively uninformative priors when uncertain
-    - Update priors based on historical performance
+    **Mitigation**:  
+    - Sensitivity analysis with different priors  
+    - Use relatively uninformative priors when uncertain  
+    - Update priors based on historical performance  
 
 === "Computational Complexity"
     **MCMC can be demanding**
     
-    **Issues**:
-    - Convergence assessment
-    - Computational time for complex models
-    - Debugging sampling algorithms
+    **Issues**:  
+    - Convergence assessment  
+    - Computational time for complex models  
+    - Debugging sampling algorithms  
     
-    **BayesTolSim solution**:
-    - Optimized algorithms for common distributions
-    - Automatic convergence checking
-    - User-friendly interface hides complexity
+    **BayesTolSim solution**:  
+    - Optimized algorithms for common distributions  
+    - Automatic convergence checking  
+    - User-friendly interface hides complexity  
 
 ### Practical Considerations
 
 === "Data Quality Requirements"
     **Same as MLE, plus more**
     
-    - **Representative samples**: Must reflect intended production
-    - **Process stability**: Consistent with prior assumptions
-    - **Adequate sample size**: Enough to meaningfully update prior
-    - **Quality measurements**: Precise, unbiased instrumentation
+    - **Representative samples**: Must reflect intended production  
+    - **Process stability**: Consistent with prior assumptions  
+    - **Adequate sample size**: Enough to meaningfully update prior  
+    - **Quality measurements**: Precise, unbiased instrumentation  
 
 === "Interpretation Complexity"
     **Three-curve visualization requires understanding**
     
-    - **Training needed**: Team must understand Bayesian concepts
-    - **Communication challenges**: Explaining uncertainty to stakeholders
-    - **Decision frameworks**: How to use probabilistic information
+    - **Training needed**: Team must understand Bayesian concepts  
+    - **Communication challenges**: Explaining uncertainty to stakeholders  
+    - **Decision frameworks**: How to use probabilistic information  
 
 ## Best Practices
 
@@ -346,6 +348,3 @@ Posterior₁ (Previous knowledge) + Data₂ → Posterior₂
 - **Platform development**: Hierarchical Bayesian models
 - **Technology transition**: Systematic knowledge migration
 
----
-
-**Next**: See Bayesian analysis in action with our [Bayesian Updating Example](../examples/bayesian-example.md), or explore how all three methods compare in our [Basic Example](../examples/basic-example.md).

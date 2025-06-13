@@ -8,37 +8,60 @@ BayesTolSim runs in your web browser - no software installation needed.
 2. Navigate to the BayesTolSim URL
 3. Start your analysis immediately
 
-## Your First Analysis (5 minutes)
+![BayesTolSim Overview](images/overview.jpg)
+
+## Your First Analysis
 
 Let's analyze a simple shaft-housing assembly:
 
 ### Step 1: Add Dimensions
 1. Click **"+ Add Dimension"** 
 2. Fill in the first dimension:
-   - **Name**: `Shaft`
-   - **Direction**: `+` 
-   - **Nominal**: `100`
-   - **Upper Tolerance**: `0.05`
-   - **Lower Tolerance**: `-0.05`
-   - **Distribution**: `Normal`
+    - **Name**: `Shaft`
+    - **Direction**: `+` 
+    - **Nominal**: `100`
+    - **Upper Tolerance**: `0.05`
+    - **Lower Tolerance**: `-0.05`
+    - **Distribution**: `Normal`  
+        - Defualt mu = nominal, default sigma = (upper - lower) / 6
+        - Support manually setting parameters, either values or expressions
 
 3. Add the second dimension:
-   - **Name**: `Housing`
-   - **Direction**: `-`
-   - **Nominal**: `98`
-   - **Upper Tolerance**: `0.03`
-   - **Lower Tolerance**: `-0.03`
-   - **Distribution**: `Normal`
+    - **Name**: `Housing`
+    - **Direction**: `-`
+    - **Nominal**: `98`
+    - **Upper Tolerance**: `0.03`
+    - **Lower Tolerance**: `-0.03`
+    - **Distribution**: `Normal`  
+        - Defualt mu = nominal, default sigma = (upper - lower) / 6
+        - Support manually setting parameters, either values or expressions
 
 ### Step 2: Set Final Tolerances
-In the "Current Dimension Chain" section:
-- **Upper Tolerance**: `0.1`
-- **Lower Tolerance**: `-0.1`
+1. In the "Current Dimension Chain" section:  
+    - **Upper Tolerance**: `0.03`  
+    - **Lower Tolerance**: `-0.03`
 
-### Step 3: Run Simulation
-1. Set **"Number of Samples"** to `10000`
+![Demo Step 1-2](images/step1-2.jpg)
+
+### Step 3: Check Distributions in Dimension Chain
+1. Click on the **"Shaft"** dimension in the dropdown
+2. View the distribution plot:
+    - Should show a normal distribution centered at 100
+    - Check statistics like μ, σ, Cp, Cpk
+    - Plot is interactive - hover to see values
+3. Repeat for the **"Housing"** dimension
+
+![Demo Step 3](images/step3.jpg)
+
+### Step 4: Run Simulation
+1. Set **"Number of Samples"**, assume `2000`
 2. Click **"Run Simulation"**
-3. View your results in seconds
+3. View your results:
+    - Final assembly dimension distribution
+    - Important statistical values including Cp, Cpk, Fail rate out of spec
+    - Plot is interactive - hover to see values
+
+![Demo Step 4](images/step4.jpg)
 
 ## Key Features
 
@@ -96,4 +119,4 @@ Shaft_Length
 - Documentation: Continue reading for detailed guides
 - Examples: Step-by-step tutorials available
 
-**Ready to learn more?** Continue to the [User Guide](user-guide/dashboard-overview.md) or try a [Complete Example](examples/basic-example.md).
+**Ready to learn more?** Continue to the [User Guide](user-guide/dashboard-overview.md).
