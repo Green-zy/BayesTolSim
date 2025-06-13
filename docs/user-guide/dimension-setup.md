@@ -92,7 +92,8 @@ The system automatically calculates these from your tolerances.
 - Column name must exactly match dimension name  
 - Effect: Uses actual manufacturing data instead of design assumptions  
 
-![Set-up](../images/upload-mle.jpg)
+![Set-up](../images/upload-mle.jpg)  
+You can find a sample CSV file [here](https://github.com/Green-zy/BayesTolSim/blob/main/data/mle_sample_data.csv). Set Norminal = 12.  
 
 **Bayes Data**: Upload prototype/trial data  
 - File: CSV with single column  
@@ -100,6 +101,8 @@ The system automatically calculates these from your tolerances.
 - Effect: Combines design specs with trial measurements  
 
 ![Set-up](../images/upload-bayes.jpg)
+
+You can find a sample CSV file [here](https://github.com/Green-zy/BayesTolSim/blob/main/data/bayes_sample_data.csv). Set Norminal = 12.  
 
 - You can iteratively upload new data to update the posterior in Bayesian method. The button will reflect the times you've updated the model.
 
