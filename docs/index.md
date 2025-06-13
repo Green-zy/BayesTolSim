@@ -39,7 +39,6 @@ BayesTolSim provides three approaches to tolerance analysis:
 |---------|-------------|
 | **[Getting Started](getting-started.md)** | quick start guide |
 | **[User Guide](user-guide/dashboard-overview.md)** | Simple interface instructions |
-| **[Examples](examples/basic-example.md)** | Step-by-step tutorials |
 | **[Reference](methods/six-sigma.md)** | Detailed theory and formulas |
 
 ## When to Use Each Method
