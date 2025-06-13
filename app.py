@@ -20,7 +20,7 @@ from src.callbacks.view_dim_distribution import register_view_dim_distribution_c
 from src.callbacks.final_dimension_simulation import register_final_dimension_simulation_callback
 
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"], suppress_callback_exceptions=True)
 app.title = "BayesTolSim"
 app.layout = layout
 

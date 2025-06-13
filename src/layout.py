@@ -7,7 +7,7 @@ layout = dbc.Container([
     dcc.Store(id="dim-count", data=0),
     html.Div(id="dummy-output", style={"display": "none"}),  # Add dummy output
 
-    # Card 1: Header with Professional Design
+# Card 1: Header with Professional Design and User Guide Link
     dbc.Card([
         dbc.CardBody([
             html.Div([
@@ -34,6 +34,36 @@ layout = dbc.Container([
                     "display": "flex",
                     "flexDirection": "column",
                     "justifyContent": "center"
+                }),
+                
+                # Right side - User Guide Link
+                html.Div([
+                    html.A(
+                        dbc.Button([
+                            html.I(className="fas fa-book-open me-2"),  # Font Awesome book icon
+                            "User Guide"
+                        ], 
+                        color="primary", 
+                        size="lg",
+                        style={
+                            "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                            "border": "none",
+                            "borderRadius": "25px",
+                            "padding": "12px 24px",
+                            "fontSize": "1.1rem",
+                            "fontWeight": "600",
+                            "boxShadow": "0 4px 15px rgba(102, 126, 234, 0.3)",
+                            "transition": "all 0.3s ease"
+                        }),
+                        href="https://green-zy.github.io/BayesTolSim/",
+                        target="_blank",
+                        style={"textDecoration": "none"},
+                        # Add hover effect via CSS
+                        className="user-guide-btn"
+                    )
+                ], style={
+                    "display": "flex",
+                    "alignItems": "center"
                 })
                 
             ], style={
